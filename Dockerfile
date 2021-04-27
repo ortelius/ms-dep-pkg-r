@@ -1,5 +1,5 @@
 #initialize a base image
-FROM python:3.8.2-alpine
+FROM python:3.8.2
 ADD requirements.txt .
 #install the dependencies of the flask app
 RUN pip install -r requirements.txt
@@ -9,4 +9,4 @@ WORKDIR /code/
 ADD . /code
 EXPOSE 5000
 #define the cimmand to start the container
-CMD ["python", "bubble.py"]
+CMD ["python", "main.py"]
