@@ -1,12 +1,8 @@
-#initialize a base image
-FROM python:3.8.2-alpine
-ADD requirements.txt .
-#install the dependencies of the flask app
-RUN pip install -r requirements.txt
-#define present working directory
+FROM quay.io/ortelius/ms-python-base:flask-1.0
+ENV PYTHONUNBUFFERED=1
 WORKDIR /code/
-#copy content into working directory
+ADD requirements.txt /code/
+RUN pip install -r requirements.txt && python -m pip uninstall -y pip;
 ADD . /code
 EXPOSE 5000
-#define the cimmand to start the container
-CMD ["python", "bubble.py"]
+CMD ["python", "main.py"]
