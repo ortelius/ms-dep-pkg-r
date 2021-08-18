@@ -38,7 +38,7 @@ class EnvironmentResource(Resource):
         compid = request.args.get('compid', None)
         deptype = request.args.get('deptype', None)
 
-        sql = "SELECT packagename, packageversion, name, url FROM dm_componentdeps where compid = %s and deptype = %s"
+        sql = "SELECT packagename, packageversion, name, url, summary FROM dm_componentdeps where compid = %s and deptype = %s"
 
         params=(compid, deptype, )
         cursor.execute(sql, params)
@@ -52,6 +52,7 @@ class EnvironmentResource(Resource):
             packageversion = row[1]
             name = row[2]
             url = row[3]
+            summary = row[4]
 
             if (not url):
                 url = 'https://spdx.org/licenses/'
@@ -70,7 +71,8 @@ class EnvironmentResource(Resource):
                     'packagename': packagename,
                     'packageversion': packageversion,
                     'name': name,
-                    'url': url
+                    'url': url,
+                    'summary': summary
                 }
             )
         cursor.close()
