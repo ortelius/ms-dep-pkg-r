@@ -17,6 +17,7 @@ db_name = os.getenv("DB_NAME", "postgres")
 db_user = os.getenv("DB_USER", "postgres")
 db_pass = os.getenv("DB_PASS", "postgres")
 db_port = os.getenv("DB_PORT", "5432") 
+validateuser_url = os.getenv("VALIDATEUSER_URL", "http://localhost:5000")
 
 conn_circuit_breaker = pybreaker.CircuitBreaker(
     fail_max=1,
@@ -32,6 +33,14 @@ class EnvironmentResource(Resource):
 
     @classmethod
     def get(cls):
+        
+        result = requests.get(validateuser_url + "/msapi/validateuser", cookies=request.cookies)
+        if (result is None):
+            return None, 404
+
+        if (result.status_code != 200):
+            return result.json(), 404
+        
         conn = create_conn() 
         cursor = conn.cursor()
 
