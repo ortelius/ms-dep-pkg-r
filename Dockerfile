@@ -1,4 +1,4 @@
-FROM quay.io/ortelius/ms-python-base:flask-1.0
+FROM quay.io/ortelius/ms-python-base:flask-1.1
 ENV PYTHONUNBUFFERED=1
 WORKDIR /code/
 ADD requirements.txt /code/
