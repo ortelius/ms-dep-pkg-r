@@ -1,5 +1,5 @@
 Flask==1.1.2
-psycopg2==2.8.6
+#psycopg2==2.8.6
 flask-restful==0.3.8
 sqlalchemy==1.4.22
 webargs==8.0.1
