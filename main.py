@@ -1,45 +1,22 @@
 import os
 from http import HTTPStatus
+from typing import List, Optional
 
 import psycopg2
-import pybreaker
+import psycopg2.extras
 import requests
-from flask import Flask, request  # module to create an api
-from flask_restful import Api, Resource
-import sqlalchemy.pool as pool
-from flask_swagger_ui import get_swaggerui_blueprint
-from webargs.flaskparser import abort, parser
+import uvicorn
+from fastapi import FastAPI, HTTPException, Query, Request, Response, status
+from pydantic import BaseModel
+from sqlalchemy import create_engine
 
-#pylint: disable=unused-argument
+# Init Globals
+service_name = 'ortelius-ms-dep-pkg-r'
 
-
-@parser.error_handler
-def handle_request_parsing_error(err, req, schema, *, error_status_code, error_headers):
-    abort(HTTPStatus.BAD_REQUEST, errors=err.messages)
-
-
-# Init Flask
-app = Flask(__name__)
-api = Api(app)
-app.url_map.strict_slashes = False
-
-
-@app.route('/static/<path:path>')
-def send_static(path):
-    return send_from_directory('static', path)
-
-
-# swagger config
-SWAGGER_URL = '/swagger'
-API_URL = '/static/swagger.yml'
-SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
-    SWAGGER_URL,
-    API_URL,
-    config={
-        'app_name': "ortelius-ms-dep-pkg-r"
-    }
+app = FastAPI(
+    title=service_name,
+    description=service_name
 )
-app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
 
 # Init db connection
 db_host = os.getenv("DB_HOST", "localhost")
@@ -49,105 +26,158 @@ db_pass = os.getenv("DB_PASS", "postgres")
 db_port = os.getenv("DB_PORT", "5432")
 validateuser_url = os.getenv("VALIDATEUSER_URL", "http://localhost:5000")
 
-# connection pool config
-conn_pool_size = int(os.getenv("POOL_SIZE", "3"))
-conn_pool_max_overflow = int(os.getenv("POOL_MAX_OVERFLOW", "2"))
-conn_pool_timeout = float(os.getenv("POOL_TIMEOUT", "30.0"))
+engine = create_engine("postgresql+psycopg2://" + db_user + ":" + db_pass + "@" + db_host + ":" + db_port + "/" + db_name)
 
-conn_circuit_breaker = pybreaker.CircuitBreaker(
-    fail_max=1,
-    reset_timeout=10,
-)
+# health check endpoint
 
 
-@conn_circuit_breaker
-def create_conn():
-    conn = psycopg2.connect(host=db_host, database=db_name, user=db_user, password=db_pass, port=db_port)
-    return conn
+class StatusMsg(BaseModel):
+    status: str
+    service_name: Optional[str] = None
 
 
-# connection pool init
-mypool = pool.QueuePool(create_conn, max_overflow=conn_pool_max_overflow, pool_size=conn_pool_size, timeout=conn_pool_timeout)
-
-
-class HealthCheck(Resource):
-    def get(self):
-        try:
-            conn = mypool.connect()
+@app.get("/health",
+         responses={
+             503: {"model": StatusMsg,
+                   "description": "DOWN Status for the Service",
+                   "content": {
+                       "application/json": {
+                           "example": {"status": 'DOWN'}
+                       },
+                   },
+                   },
+             200: {"model": StatusMsg,
+                   "description": "UP Status for the Service",
+                   "content": {
+                       "application/json": {
+                           "example": {"status": 'UP', "service_name": service_name}
+                       }
+                   },
+                   },
+         }
+         )
+async def health(response: Response):
+    try:
+        with engine.connect() as connection:
+            conn = connection.connection
             cursor = conn.cursor()
             cursor.execute('SELECT 1')
-            conn.close()
             if cursor.rowcount > 0:
-                return ({"status": 'UP', "service_name": 'ortelius-ms-dep-pkg-r'}), HTTPStatus.OK
-            return ({"status": 'DOWN'}), HTTPStatus.SERVICE_UNAVAILABLE
+                return {"status": 'UP', "service_name": service_name}
+            response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+            return {"status": 'DOWN'}
 
-        except Exception as err:
-            print(err)
-            return ({"status": 'DOWN'}), HTTPStatus.SERVICE_UNAVAILABLE
+    except Exception as err:
+        print(str(err))
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {"status": 'DOWN'}
+# end health check
 
 
-api.add_resource(HealthCheck, '/health')
+class DepPkg(BaseModel):
+    packagename: str
+    packageversion: str
+    name: str
+    url: str
+    summary: str
 
 
-class EnvironmentResource(Resource):
+class DepPkgs(BaseModel):
+    data: List[DepPkg]
 
-    def get(self):
 
+class Message(BaseModel):
+    detail: str
+
+
+@app.get('/msapi/deppkg',
+         responses={
+             401: {"model": Message,
+                   "description": "Authorization Status",
+                   "content": {
+                       "application/json": {
+                           "example": {"detail": "Authorization failed"}
+                       },
+                   },
+                   },
+             500: {"model": Message,
+                   "description": "SQL Error",
+                   "content": {
+                       "application/json": {
+                           "example": {"detail": "SQL Error: 30x"}
+                       },
+                   },
+                   },
+             200: {
+                 "model": DepPkgs,
+                 "description": "Component Paackage Dependencies"},
+             "content": {
+                 "application/json": {
+                     "example": {"data": [{"packagename": "Flask", "packageversion": "1.2.2", "name": "BSD-3-Clause", "url": "https://spdx.org/licenses/BSD-3-Clause.html", "summary": ""}]}
+                 }
+             }
+         }
+         )
+async def getCompPkgDeps(request: Request, compid: int, deptype: str = Query(..., regex="(?:license|cve)")):
+    try:
         result = requests.get(validateuser_url + "/msapi/validateuser", cookies=request.cookies)
         if (result is None):
-            return None, HTTPStatus.UNAUTHORIZED
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization Failed")
 
-        if (result.status_code != 200):
-            return result.json(), HTTPStatus.UNAUTHORIZED
+        if (result.status_code != status.HTTP_200_OK):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization Failed status_code=" + str(result.status_code))
+    except Exception as err:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization Failed:" + str(err)) from None
 
-        conn = mypool.connect()
-        cursor = conn.cursor()
+    response_data = []
 
-        compid = request.args.get('compid', None)
-        deptype = request.args.get('deptype', None)
+    try:
+        with engine.connect() as connection:
+            conn = connection.connection
+            cursor = conn.cursor()
 
-        sql = "SELECT packagename, packageversion, name, url, summary FROM dm_componentdeps where compid = %s and deptype = %s"
+            sql = "SELECT packagename, packageversion, name, url, summary FROM dm_componentdeps where compid = %s and deptype = %s"
 
-        params = (compid, deptype, )
-        cursor.execute(sql, params)
-        rows = cursor.fetchall()
-        response_data = []
-        valid_url = {}
+            params = tuple([compid, deptype])
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+            valid_url = {}
 
-        for row in rows:
-            # check for license on SPDX site if not found just return the license landing page
-            packagename = row[0]
-            packageversion = row[1]
-            name = row[2]
-            url = row[3]
-            summary = row[4]
+            for row in rows:
+                # check for license on SPDX site if not found just return the license landing page
+                packagename = row[0]
+                packageversion = row[1]
+                name = row[2]
+                url = row[3]
+                summary = row[4]
 
-            if (not url):
-                url = 'https://spdx.org/licenses/'
+                if (not url):
+                    url = 'https://spdx.org/licenses/'
 
-            if (name not in valid_url):
-                r = requests.head(url)
-                if (r.status_code == 200):
-                    valid_url[name] = url
-                else:
-                    valid_url[name] = 'https://spdx.org/licenses/'
+                if (name not in valid_url):
+                    r = requests.head(url)
+                    if (r.status_code == 200):
+                        valid_url[name] = url
+                    else:
+                        valid_url[name] = 'https://spdx.org/licenses/'
 
-            url = valid_url[name]
+                url = valid_url[name]
 
-            response_data.append(
-                {
-                    'packagename': packagename,
-                    'packageversion': packageversion,
-                    'name': name,
-                    'url': url,
-                    'summary': summary
-                }
-            )
-        cursor.close()
-        return {'data': response_data}
+                response_data.append(
+                    {
+                        'packagename': packagename,
+                        'packageversion': packageversion,
+                        'name': name,
+                        'url': url,
+                        'summary': summary
+                    }
+                )
+            cursor.close()
+            return {'data': response_data}
 
+    except HTTPException:
+        raise
+    except Exception as err:
+        print(str(err))
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err)) from None
 
-api.add_resource(EnvironmentResource, '/msapi/deppkg')
-
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5004)
