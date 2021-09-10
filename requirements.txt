@@ -1,7 +1,7 @@
-Flask==1.1.2
-#psycopg2==2.8.6
-flask-restful==0.3.8
-sqlalchemy==1.4.22
-webargs==8.0.1
-pybreaker==0.6.0
-flask-swagger-ui==3.36.0
+# cryptography - installed by base image
+# FastApi - installed by base image
+# psycopg2 - installed by base image
+# PyJWT==2.0.1 - installed by base image
+# sqlalchemy==1.4.22 - installed by base image
+pydantic==1.8.2
+requests==2.18.4
