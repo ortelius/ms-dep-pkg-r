@@ -9,9 +9,13 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel
 from sqlalchemy import create_engine
+from sqlalchemy.exc import OperationalError, StatementError
+from time import sleep
+import logging
 
 # Init Globals
 service_name = 'ortelius-ms-dep-pkg-r'
+db_conn_retry = 3
 
 app = FastAPI(
     title=service_name,
@@ -26,7 +30,7 @@ db_pass = os.getenv("DB_PASS", "postgres")
 db_port = os.getenv("DB_PORT", "5432")
 validateuser_url = os.getenv("VALIDATEUSER_URL", "http://localhost:5000")
 
-engine = create_engine("postgresql+psycopg2://" + db_user + ":" + db_pass + "@" + db_host + ":" + db_port + "/" + db_name)
+engine = create_engine("postgresql+psycopg2://" + db_user + ":" + db_pass + "@" + db_host + ":" + db_port + "/" + db_name, pool_pre_ping=True)
 
 # health check endpoint
 
@@ -132,49 +136,69 @@ async def getCompPkgDeps(request: Request, compid: int, deptype: str = Query(...
     response_data = []
 
     try:
-        with engine.connect() as connection:
-            conn = connection.connection
-            cursor = conn.cursor()
-
-            sql = "SELECT packagename, packageversion, name, url, summary FROM dm_componentdeps where compid = %s and deptype = %s"
-
-            params = tuple([compid, deptype])
-            cursor.execute(sql, params)
-            rows = cursor.fetchall()
-            valid_url = {}
-
-            for row in rows:
-                # check for license on SPDX site if not found just return the license landing page
-                packagename = row[0]
-                packageversion = row[1]
-                name = row[2]
-                url = row[3]
-                summary = row[4]
-
-                if (not url):
-                    url = 'https://spdx.org/licenses/'
-
-                if (name not in valid_url):
-                    r = requests.head(url)
-                    if (r.status_code == 200):
-                        valid_url[name] = url
-                    else:
-                        valid_url[name] = 'https://spdx.org/licenses/'
-
-                url = valid_url[name]
-
-                response_data.append(
-                    {
-                        'packagename': packagename,
-                        'packageversion': packageversion,
-                        'name': name,
-                        'url': url,
-                        'summary': summary
-                    }
-                )
-            cursor.close()
-            return {'data': response_data}
-
+        #Retry logic for failed query
+        no_of_retry = db_conn_retry
+        attempt = 1;
+        while True:
+            try:
+                with engine.connect() as connection:
+                    conn = connection.connection
+                    cursor = conn.cursor()
+        
+                    sql = "SELECT packagename, packageversion, name, url, summary FROM dm_componentdeps where compid = %s and deptype = %s"
+        
+                    params = tuple([compid, deptype])
+                    cursor.execute(sql, params)
+                    rows = cursor.fetchall()
+                    valid_url = {}
+        
+                    for row in rows:
+                        # check for license on SPDX site if not found just return the license landing page
+                        packagename = row[0]
+                        packageversion = row[1]
+                        name = row[2]
+                        url = row[3]
+                        summary = row[4]
+        
+                        if (not url):
+                            url = 'https://spdx.org/licenses/'
+        
+                        if (name not in valid_url):
+                            r = requests.head(url)
+                            if (r.status_code == 200):
+                                valid_url[name] = url
+                            else:
+                                valid_url[name] = 'https://spdx.org/licenses/'
+        
+                        url = valid_url[name]
+        
+                        response_data.append(
+                            {
+                                'packagename': packagename,
+                                'packageversion': packageversion,
+                                'name': name,
+                                'url': url,
+                                'summary': summary
+                            }
+                        )
+                    cursor.close()
+                    return {'data': response_data}
+            
+            except (InterfaceError, OperationalError) as ex:
+                if attempt < no_of_retry:
+                    logging.error(
+                        "Database connection error: {} - sleeping for {}s"
+                        " and will retry (attempt #{} of {})".format(
+                            ex, sleep_for, attempt, no_of_retry
+                        )
+                    )
+                    #200ms of sleep time in cons. retry calls 
+                    sleep(0.2) 
+                    attempt += 1
+                    continue
+                else:
+                    raise
+        
     except HTTPException:
         raise
     except Exception as err:
