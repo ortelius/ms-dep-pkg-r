@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  ms-dep-pkg-r:
+  - apiVersion: v2
+    appVersion: "1.0"
+    created: "2021-11-11T04:45:46.176689504Z"
+    description: Dependency Packages
+    digest: fc385f7500b43852b228c67ccebb3f993b4d4657f924fba9e181e9163e8cbeb0
+    name: ms-dep-pkg-r
+    type: application
+    urls:
+    - https://github.com/ortelius/ortelius-ms-dep-pkg-r/releases/download/ms-dep-pkg-r-0.1.0/ms-dep-pkg-r-0.1.0.tgz
+    version: 0.1.0
+generated: "2021-11-11T04:45:46.176695004Z"
