@@ -18,7 +18,7 @@
   CustomAction: GLOBAL.HelmChart
   DockerRepo: quay.io/ortelius/ms-dep-pkg-r
   DockerSha: dcf6cd67506201103c8e27506f165b6be44458f71bc6a65fc293896d63b0c8b1
-  DockerTag: deploy-v10.0.0.30-gb2b5d0c
+  DockerTag: deploy-v10.0.0.41-gcb673f9
   EXT: sh
   GitBranch: deploy
   GitCommit: b2b5d0c
@@ -37,10 +37,10 @@
   buildurl: https://console.cloud.google.com/cloud-build/builds/889cb6ce-efe4-4570-8b51-d71ca204723c?project=eighth-physics-169321
   chart: chart/ms-dep-pkg-r
   chartnamespace: ortelius
-  component: ms-dep-pkg-r;deploy;v10_0_0_30_gb2b5d0c
+  component: ms-dep-pkg-r;deploy;v10_0_0_41_gcb673f9
   dockerrepo: quay.io/ortelius/ms-dep-pkg-r
   dockersha: dcf6cd67506201103c8e27506f165b6be44458f71bc6a65fc293896d63b0c8b1
-  dockertag: deploy-v10.0.0.30-gb2b5d0c
+  dockertag: deploy-v10.0.0.41-gcb673f9
   dropzone: /tmp/tdm.1270.8
   environment: aks-cluster
   gitcommit: b2b5d0c
