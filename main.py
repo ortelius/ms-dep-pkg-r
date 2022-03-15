@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
+import socket
 from http import HTTPStatus
+from time import sleep
 from typing import List, Optional
 
 import psycopg2
@@ -23,9 +26,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel
 from sqlalchemy import create_engine
-from sqlalchemy.exc import OperationalError, StatementError
-from time import sleep
-import logging
+from sqlalchemy.exc import OperationalError, StatementError, InterfaceError
 
 # Init Globals
 service_name = 'ortelius-ms-dep-pkg-r'
