@@ -12,41 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-  BuildNumber: 0
-  Chart: chart/ms-dep-pkg-r
-  ChartNamespace: ortelius
-  CustomAction: GLOBAL.HelmChart
-  DockerRepo: quay.io/ortelius/ms-dep-pkg-r
-  DockerSha: dcf6cd67506201103c8e27506f165b6be44458f71bc6a65fc293896d63b0c8b1
-  DockerTag: deploy-v10.0.0.41-gcb673f9
-  EXT: sh
-  GitBranch: deploy
-  GitCommit: b2b5d0c
-  GitRepo: ortelius/ortelius-ms-dep-pkg-r
-  GitTag: deploy
-  GitUrl: git@github.com:ortelius/ortelius-ms-dep-pkg-r.git
-  RE_PHYSICAL_HOSTNAME: localhost
-  RE_PHYSICAL_SERVER: localhost
-  aks:
-    admin: true
-    cluster: cluster2-aks
-    resourcegroup: cluster1-rg
-  application: ortelius-devops
-  builddate: Tue Sep 21 21:34:47 UTC 2021
-  buildid: 889cb6ce-efe4-4570-8b51-d71ca204723c
-  buildurl: https://console.cloud.google.com/cloud-build/builds/889cb6ce-efe4-4570-8b51-d71ca204723c?project=eighth-physics-169321
-  chart: chart/ms-dep-pkg-r
-  chartnamespace: ortelius
-  component: ms-dep-pkg-r;deploy;v10_0_0_41_gcb673f9
-  dockerrepo: quay.io/ortelius/ms-dep-pkg-r
-  dockersha: dcf6cd67506201103c8e27506f165b6be44458f71bc6a65fc293896d63b0c8b1
-  dockertag: deploy-v10.0.0.41-gcb673f9
-  dropzone: /tmp/tdm.1270.8
-  environment: aks-cluster
-  gitcommit: b2b5d0c
-  gitrepo: ortelius/ortelius-ms-dep-pkg-r
-  gittag: deploy
-  giturl: git@github.com:ortelius/ortelius-ms-dep-pkg-r.git
-  kubectl_context: cluster2-aks-admin
-  server_hostname: localhost
-  server_name: localhost
+DockerRepo: quay.io/ortelius/ms-dep-pkg-r
+DockerSha: dcf6cd67506201103c8e27506f165b6be44458f71bc6a65fc293896d63b0c8b1
+DockerTag: deploy-v10.0.0.41-gcb673f9
