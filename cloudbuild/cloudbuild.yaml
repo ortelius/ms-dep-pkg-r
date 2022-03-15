@@ -25,6 +25,7 @@ steps:
   # Setup environment including img tag name for nginx
   - name: python
     id: gitvars
+    secretEnv: ['DHUSER', 'DHPASS']
     entrypoint: 'bash'
     args:
       - '-c'
