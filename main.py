@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
 import os
 import socket
@@ -26,7 +27,10 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel
 from sqlalchemy import create_engine
-from sqlalchemy.exc import OperationalError, StatementError, InterfaceError
+from sqlalchemy.exc import InterfaceError, OperationalError, StatementError
+
+def isBlank (myString):
+    return not (myString and myString.strip())
 
 # Init Globals
 service_name = 'ortelius-ms-dep-pkg-r'
@@ -104,6 +108,8 @@ class DepPkg(BaseModel):
     name: str
     url: str
     summary: str
+    fullcompname: str
+    risklevel: str
 
 
 class DepPkgs(BaseModel):
@@ -142,7 +148,7 @@ class Message(BaseModel):
              }
          }
          )
-async def getCompPkgDeps(request: Request, compid: int, deptype: str = Query(..., regex="(?:license|cve)")):
+async def getCompPkgDeps(request: Request, compid: Optional[int] = None, appid: Optional[int] = None, deptype: str = Query(..., regex="(?:license|cve)")):
     try:
         result = requests.get(validateuser_url + "/msapi/validateuser", cookies=request.cookies)
         if (result is None):
@@ -165,47 +171,94 @@ async def getCompPkgDeps(request: Request, compid: int, deptype: str = Query(...
                     conn = connection.connection
                     cursor = conn.cursor()
         
-                    sql = "SELECT packagename, packageversion, name, url, summary FROM dm_componentdeps where compid = %s and deptype = %s"
+                    sql = ""
+                    id = compid
+                    if (compid is not None):
+                        sql = "SELECT packagename, packageversion, name, url, summary, '', purl, pkgtype FROM dm_componentdeps where compid = %s and deptype = %s"
+                    elif (appid is not None):
+                        sql = "select distinct b.packagename, b.packageversion, b.name, b.url, b.summary, fulldomain(c.domainid, c.name), b.purl, b.pkgtype from dm.dm_applicationcomponent a, dm.dm_componentdeps b, dm.dm_component c where appid = %s and a.compid = b.compid and c.id = b.compid and b.deptype = %s"
+                        id = appid
         
-                    params = tuple([compid, deptype])
+                    params = tuple([id, 'license'])
                     cursor.execute(sql, params)
                     rows = cursor.fetchall()
                     valid_url = {}
         
                     for row in rows:
-                        # check for license on SPDX site if not found just return the license landing page
                         packagename = row[0]
                         packageversion = row[1]
                         name = row[2]
                         url = row[3]
                         summary = row[4]
+                        fullcompname = row[5]
+                        purl = row[6]
+                        pkgtype = row[7]
         
-                        if (not url):
-                            url = 'https://spdx.org/licenses/'
-        
-                        if (name not in valid_url):
-                            r = requests.head(url)
-                            if (r.status_code == 200):
-                                valid_url[name] = url
+                        if (deptype == "license"):
+                            if (not url):
+                                url = 'https://spdx.org/licenses/'
+            
+                            # check for license on SPDX site if not found just return the license landing page
+                            if (name not in valid_url):
+                                r = requests.head(url)
+                                if (r.status_code == 200):
+                                    valid_url[name] = url
+                                else:
+                                    valid_url[name] = 'https://spdx.org/licenses/'
+            
+                            url = valid_url[name]
+            
+                            response_data.append(
+                                {
+                                    'packagename': packagename,
+                                    'packageversion': packageversion,
+                                    'name': name,
+                                    'url': url,
+                                    'summary': summary,
+                                    'fullcompname': fullcompname
+                                }
+                            )
+                        else:
+                            v_sql = ""
+                            v_params = tuple([])
+                            if (isBlank(purl)):
+                                v_sql = "select id, summary, risklevel from dm.dm_vulns where packagename = %s and packageversion = %s"
+                                v_params = tuple([packagename, packageversion])
                             else:
-                                valid_url[name] = 'https://spdx.org/licenses/'
-        
-                        url = valid_url[name]
-        
-                        response_data.append(
-                            {
-                                'packagename': packagename,
-                                'packageversion': packageversion,
-                                'name': name,
-                                'url': url,
-                                'summary': summary
-                            }
-                        )
+                                if ('?' in purl):
+                                    purl = purl.split('?')[0]
+                                v_sql = "select id, summary,risklevel from dm.dm_vulns where purl = %s"
+                                v_params = tuple([purl])
+
+                            v_cursor = conn.cursor()
+                            v_cursor.execute(v_sql, v_params)
+                            v_rows = v_cursor.fetchall()
+
+                            for v_row in v_rows:
+                                id = v_row[0]
+                                summary = v_row[1]
+                                risklevel = v_row[2]
+
+                                url = "https://osv.dev/vulnerability/" + id
+                                response_data.append(
+                                    {
+                                        'packagename': packagename,
+                                        'packageversion': packageversion,
+                                        'name': id,
+                                        'url': url,
+                                        'summary': summary,
+                                        'fullcompname': fullcompname,
+                                        'risklevel': risklevel
+                                    }
+                                )
+                            v_cursor.close()
+
                     cursor.close()
                     return {'data': response_data}
             
             except (InterfaceError, OperationalError) as ex:
                 if attempt < no_of_retry:
+                    sleep_for = 0.2
                     logging.error(
                         "Database connection error: {} - sleeping for {}s"
                         " and will retry (attempt #{} of {})".format(
@@ -213,7 +266,7 @@ async def getCompPkgDeps(request: Request, compid: int, deptype: str = Query(...
                         )
                     )
                     #200ms of sleep time in cons. retry calls 
-                    sleep(0.2) 
+                    sleep(sleep_for) 
                     attempt += 1
                     continue
                 else:
@@ -225,3 +278,5 @@ async def getCompPkgDeps(request: Request, compid: int, deptype: str = Query(...
         print(str(err))
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err)) from None
 
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=5004)
