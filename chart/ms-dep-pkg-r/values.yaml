@@ -1,3 +1,3 @@
 DockerRepo: quay.io/ortelius/ms-dep-pkg-r
-DockerSha: 104d1d5c5066
-DockerTag: deploy-v10.0.0.61-g62fba5a
+DockerSha: 6415c568b906
+DockerTag: 	deploy-v10.0.0.81-g7400440
