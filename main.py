@@ -57,34 +57,12 @@ if (validateuser_url is None):
 engine = create_engine("postgresql+psycopg2://" + db_user + ":" + db_pass + "@" + db_host + ":" + db_port + "/" + db_name, pool_pre_ping=True)
 
 # health check endpoint
-
-
 class StatusMsg(BaseModel):
     status: str
     service_name: Optional[str] = None
 
-
-@app.get("/health",
-         responses={
-             503: {"model": StatusMsg,
-                   "description": "DOWN Status for the Service",
-                   "content": {
-                       "application/json": {
-                           "example": {"status": 'DOWN'}
-                       },
-                   },
-                   },
-             200: {"model": StatusMsg,
-                   "description": "UP Status for the Service",
-                   "content": {
-                       "application/json": {
-                           "example": {"status": 'UP', "service_name": service_name}
-                       }
-                   },
-                   },
-         }
-         )
-async def health(response: Response):
+@app.get("/health")
+async def health(response: Response) -> StatusMsg:
     try:
         with engine.connect() as connection:
             conn = connection.connection
@@ -111,44 +89,8 @@ class DepPkg(BaseModel):
     fullcompname: str
     risklevel: str
 
-
-class DepPkgs(BaseModel):
-    data: List[DepPkg]
-
-
-class Message(BaseModel):
-    detail: str
-
-
-@app.get('/msapi/deppkg',
-         responses={
-             401: {"model": Message,
-                   "description": "Authorization Status",
-                   "content": {
-                       "application/json": {
-                           "example": {"detail": "Authorization failed"}
-                       },
-                   },
-                   },
-             500: {"model": Message,
-                   "description": "SQL Error",
-                   "content": {
-                       "application/json": {
-                           "example": {"detail": "SQL Error: 30x"}
-                       },
-                   },
-                   },
-             200: {
-                 "model": DepPkgs,
-                 "description": "Component Paackage Dependencies"},
-             "content": {
-                 "application/json": {
-                     "example": {"data": [{"packagename": "Flask", "packageversion": "1.2.2", "name": "BSD-3-Clause", "url": "https://spdx.org/licenses/BSD-3-Clause.html", "summary": ""}]}
-                 }
-             }
-         }
-         )
-async def getCompPkgDeps(request: Request, compid: Optional[int] = None, appid: Optional[int] = None, deptype: str = Query(..., regex="(?:license|cve)")):
+@app.get('/msapi/deppkg')
+async def getCompPkgDeps(request: Request, compid: Optional[int] = None, appid: Optional[int] = None, deptype: str = Query(..., regex="(?:license|cve)")) -> list[DepPkg]:
     try:
         result = requests.get(validateuser_url + "/msapi/validateuser", cookies=request.cookies)
         if (result is None):
