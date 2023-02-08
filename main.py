@@ -112,7 +112,7 @@ async def getCompPkgDeps(request: Request, compid: Optional[int] = None, appid: 
                 with engine.connect() as connection:
                     conn = connection.connection
                     cursor = conn.cursor()
-        
+
                     sql = ""
                     id = compid
                     if (compid is not None):
@@ -120,12 +120,12 @@ async def getCompPkgDeps(request: Request, compid: Optional[int] = None, appid: 
                     elif (appid is not None):
                         sql = "select distinct b.packagename, b.packageversion, b.name, b.url, b.summary, fulldomain(c.domainid, c.name), b.purl, b.pkgtype from dm.dm_applicationcomponent a, dm.dm_componentdeps b, dm.dm_component c where appid = %s and a.compid = b.compid and c.id = b.compid and b.deptype = %s"
                         id = appid
-        
+
                     params = tuple([id, 'license'])
                     cursor.execute(sql, params)
                     rows = cursor.fetchall()
                     valid_url = {}
-        
+
                     for row in rows:
                         packagename = row[0]
                         packageversion = row[1]
@@ -135,11 +135,11 @@ async def getCompPkgDeps(request: Request, compid: Optional[int] = None, appid: 
                         fullcompname = row[5]
                         purl = row[6]
                         pkgtype = row[7]
-        
+
                         if (deptype == "license"):
                             if (not url):
                                 url = 'https://spdx.org/licenses/'
-            
+
                             # check for license on SPDX site if not found just return the license landing page
                             if (name not in valid_url):
                                 r = requests.head(url)
@@ -147,9 +147,9 @@ async def getCompPkgDeps(request: Request, compid: Optional[int] = None, appid: 
                                     valid_url[name] = url
                                 else:
                                     valid_url[name] = 'https://spdx.org/licenses/'
-            
+
                             url = valid_url[name]
-            
+
                             response_data.append(
                                 {
                                     'packagename': packagename,
@@ -197,7 +197,7 @@ async def getCompPkgDeps(request: Request, compid: Optional[int] = None, appid: 
 
                     cursor.close()
                     return {'data': response_data}
-            
+
             except (InterfaceError, OperationalError) as ex:
                 if attempt < no_of_retry:
                     sleep_for = 0.2
@@ -207,13 +207,13 @@ async def getCompPkgDeps(request: Request, compid: Optional[int] = None, appid: 
                             ex, sleep_for, attempt, no_of_retry
                         )
                     )
-                    #200ms of sleep time in cons. retry calls 
-                    sleep(sleep_for) 
+                    #200ms of sleep time in cons. retry calls
+                    sleep(sleep_for)
                     attempt += 1
                     continue
                 else:
                     raise
-        
+
     except HTTPException:
         raise
     except Exception as err:
