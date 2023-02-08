@@ -1,6 +1,6 @@
 replicaCount: 1
 image:
   repository: quay.io/ortelius/ms-dep-pkg-r
-  tag: main-v10.0.6-gba6779
-  sha: sha256:c5dd911d8cc3ce65ed9096cd82b7a0daeec93e4700878f558cc69db24b3cf3e0
+  tag: main-v10.0.7-g61bb57
+  sha: sha256:3cefbc14507d41737a309f80d612674f87881d6a24520e833f77ad78a2a408c3
   pullPolicy: Always
