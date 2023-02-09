@@ -161,7 +161,8 @@ async def getCompPkgDeps(request: Request, compid: Optional[int] = None, appid: 
                                     'name': name,
                                     'url': url,
                                     'summary': summary,
-                                    'fullcompname': fullcompname
+                                    'fullcompname': fullcompname,
+                                    'risklevel': ''
                                 }
                             )
                         else:
