@@ -89,8 +89,12 @@ class DepPkg(BaseModel):
     fullcompname: str
     risklevel: str
 
+class DepPkgs(BaseModel):
+    data: List[DepPkg]
+
 @app.get('/msapi/deppkg')
-async def getCompPkgDeps(request: Request, compid: Optional[int] = None, appid: Optional[int] = None, deptype: str = Query(..., regex="(?:license|cve)")) -> list[DepPkg]:
+async def getCompPkgDeps(request: Request, compid: Optional[int] = None, appid: Optional[int] = None, deptype: str = Query(..., regex="(?:license|cve)")) -> DepPkgs:
+    data: List[DepPkg]:
     try:
         result = requests.get(validateuser_url + "/msapi/validateuser", cookies=request.cookies)
         if (result is None):
