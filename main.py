@@ -29,6 +29,7 @@ from pydantic import BaseModel
 from sqlalchemy import create_engine
 from sqlalchemy.exc import InterfaceError, OperationalError, StatementError
 
+
 def isBlank (myString):
     return not (myString and myString.strip())
 
