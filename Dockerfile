@@ -1,6 +1,6 @@
 FROM cgr.dev/chainguard/python:latest-dev AS builder
 COPY . /app
-RUN cd /app && pip install -r requirements.txt
+RUN cd /app && pip install -r requirements.txt;
 
 FROM cgr.dev/chainguard/python
 ENV DB_HOST localhost
