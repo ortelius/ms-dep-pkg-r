@@ -7,6 +7,7 @@ on:
     paths-ignore:
       - "chart/ms-dep-pkg-r/Chart.yaml"
       - "chart/ms-dep-pkg-r/values.yaml"
+
 jobs:
   release:
     runs-on: ubuntu-latest
