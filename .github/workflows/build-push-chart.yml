@@ -5,7 +5,8 @@ on:
     branches:
       - main
     paths-ignore:
-      - "chart/**"
+      - "chart/ms-dep-pkg-r/Chart.yaml"
+      - "chart/ms-dep-pkg-r/values.yaml"
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -49,7 +50,7 @@ jobs:
         with:
           push: true
           tags: ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.IMAGE_TAG }}
-          
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
