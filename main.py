@@ -26,7 +26,7 @@ import requests
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel
-from sqlalchemy import create_engine
+from sqlalchemy import sql, create_engine
 from sqlalchemy.exc import InterfaceError, OperationalError, StatementError
 
 
@@ -118,16 +118,16 @@ async def getCompPkgDeps(request: Request, compid: Optional[int] = None, appid: 
                     conn = connection.connection
                     cursor = conn.cursor()
 
-                    sql = ""
+                    sqlstmt = ""
                     id = compid
                     if (compid is not None):
-                        sql = "SELECT packagename, packageversion, name, url, summary, '', purl, pkgtype FROM dm_componentdeps where compid = %s and deptype = %s"
+                        sqlstmt = "SELECT packagename, packageversion, name, url, summary, '', purl, pkgtype FROM dm_componentdeps where compid = %s and deptype = %s"
                     elif (appid is not None):
-                        sql = "select distinct b.packagename, b.packageversion, b.name, b.url, b.summary, fulldomain(c.domainid, c.name), b.purl, b.pkgtype from dm.dm_applicationcomponent a, dm.dm_componentdeps b, dm.dm_component c where appid = %s and a.compid = b.compid and c.id = b.compid and b.deptype = %s"
+                        sqlstmt = "select distinct b.packagename, b.packageversion, b.name, b.url, b.summary, fulldomain(c.domainid, c.name), b.purl, b.pkgtype from dm.dm_applicationcomponent a, dm.dm_componentdeps b, dm.dm_component c where appid = %s and a.compid = b.compid and c.id = b.compid and b.deptype = %s"
                         id = appid
 
                     params = tuple([id, 'license'])
-                    cursor.execute(sql, params)
+                    cursor.execute(sql.text(sqlstmt), params)
                     rows = cursor.fetchall()
                     valid_url = {}
 
@@ -179,7 +179,7 @@ async def getCompPkgDeps(request: Request, compid: Optional[int] = None, appid: 
                                 v_params = tuple([purl])
 
                             v_cursor = conn.cursor()
-                            v_cursor.execute(v_sql, v_params)
+                            v_cursor.execute(sql.text(v_sql), v_params)
                             v_rows = v_cursor.fetchall()
 
                             for v_row in v_rows:
