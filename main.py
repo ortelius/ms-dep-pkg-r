@@ -127,7 +127,7 @@ async def getCompPkgDeps(request: Request, compid: Optional[int] = None, appid: 
                         id = appid
 
                     params = tuple([id, 'license'])
-                    cursor.execute(sql.text(sqlstmt), params)
+                    cursor.execute(sqlstmt, params)
                     rows = cursor.fetchall()
                     valid_url = {}
 
@@ -179,7 +179,7 @@ async def getCompPkgDeps(request: Request, compid: Optional[int] = None, appid: 
                                 v_params = tuple([purl])
 
                             v_cursor = conn.cursor()
-                            v_cursor.execute(sql.text(v_sql), v_params)
+                            v_cursor.execute(v_sql, v_params)
                             v_rows = v_cursor.fetchall()
 
                             for v_row in v_rows:
