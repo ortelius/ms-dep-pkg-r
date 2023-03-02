@@ -24,6 +24,14 @@ jobs:
         with:
           fetch-depth: 2
 
+      ################################
+      # Run Linter against code base #
+      ################################
+      - name: Lint Code Base
+        uses: github/super-linter/slim@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Set Convenience Env Vars
         id: env
         run: |
