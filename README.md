@@ -1,20 +1,23 @@
 # ortelius-ms-dep-pkg-r
+
 Dependency Package Data Microservice - Read
 
 This is a flask web application which returns a list of objects known as Component Dependencies when the
 endpoint `/msapi/deppkg` is accessed.
 
-# Setup
+## Setup
+
 - Clone the repository on your local computer
 
 ### Start Postgres
+
 The project requires a Postgres server to be running. This can be done by either installing Postgres directly on
 your machine and making available the following environmental variables for your python application:
 
 | Environmental Variable | Description |
 | --------- | --------- |
 | DB_NAME | The name of the database you have created for the purpose of this project |
-| DB_HOST | The host name of the database server |
+| DB_HOST | The hostname of the database server |
 | DB_USER | The username that would be used to access the database |
 | DB_PASSWORD | The password to the database attached to the provided above user |
 | DB_PORT | The port that the postgres server run on. Usually 5432. |
@@ -32,16 +35,22 @@ DB_PORT=5433
 ```
 
 ### To start the flask application
+
 The flask application has been dockerized and can be utilized by following the steps below;
+
 - Build the docker image using the following command
+
   ```shell
   docker build -t comp-dep .
   ```
+
 - Run the docker on local machine by executing the following command
+
   ```shell
   docker run -p 5000:5000 --env-file .env -d comp-dep
   ```
-- You should be able to access the webpage at [localhost:5000](http://www.localhost:5000/) and the list of
+
+- You should be able to access the web page at [localhost:5000](http://www.localhost:5000/) and the list of
 component dependencies in json at [http://localhost:5000/msapi/deppkg](http://localhost:5000/msapi/deppkg)
 
 ------------------------------------------
@@ -54,7 +63,7 @@ docker-compose up --build
 ```
 
 This command starts up the database server, the flask application and seeds the database with dummy data.
-Once you do this, you should be able to access the webpage at [localhost:5000](http://www.localhost:5000/).
+Once you do this, you should be able to access the web page at [localhost:5000](http://www.localhost:5000/).
 And hitting [http://localhost:5000/msapi/deppkg](http://localhost:5000/msapi/deppkg) should return a response like this:
 
 ```json
