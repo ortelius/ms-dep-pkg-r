@@ -40,6 +40,7 @@ jobs:
           VALIDATE_DOCKERFILE_HADOLINT: true
           VALIDATE_MARKDOWN: true
           INPUT_BLACK_ARGS: "-l 200"
+          PYTHON_FLAKE8_CONFIG_FILE: /github/workspace/.flake8
 
 
       - name: Set Convenience Env Vars
