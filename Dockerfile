@@ -1,8 +1,10 @@
 FROM cgr.dev/chainguard/python:latest-dev AS builder
 COPY . /app
-RUN cd /app && pip install -r requirements.txt;
 
-FROM cgr.dev/chainguard/python
+WORKDIR /app
+RUN pip install --no-cache-dir -r requirements.txt;
+
+FROM cgr.dev/chainguard/python:3.11
 ENV DB_HOST localhost
 ENV DB_NAME postgres
 ENV DB_USER postgres
