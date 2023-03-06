@@ -39,9 +39,6 @@ jobs:
           VALIDATE_PYTHON_PYLINT: true
           VALIDATE_DOCKERFILE_HADOLINT: true
           VALIDATE_MARKDOWN: true
-          INPUT_BLACK_ARGS: "-l 200"
-          PYTHON_FLAKE8_LINTER_RULES: /github/workspace/.flake8
-
 
       - name: Set Convenience Env Vars
         id: env
