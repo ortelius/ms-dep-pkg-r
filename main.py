@@ -48,21 +48,10 @@ validateuser_url = os.getenv("VALIDATEUSER_URL", "")
 if len(validateuser_url) == 0:
     validateuser_host = os.getenv("MS_VALIDATE_USER_SERVICE_HOST", "127.0.0.1")
     host = socket.gethostbyaddr(validateuser_host)[0]
-    validateuser_url = (
-        "http://" + host + ":" + str(os.getenv("MS_VALIDATE_USER_SERVICE_PORT", 80))
-    )
+    validateuser_url = "http://" + host + ":" + str(os.getenv("MS_VALIDATE_USER_SERVICE_PORT", 80))
 
 engine = create_engine(
-    "postgresql+psycopg2://"
-    + db_user
-    + ":"
-    + db_pass
-    + "@"
-    + db_host
-    + ":"
-    + db_port
-    + "/"
-    + db_name,
+    "postgresql+psycopg2://" + db_user + ":" + db_pass + "@" + db_host + ":" + db_port + "/" + db_name,
     pool_pre_ping=True,
 )
 
@@ -120,13 +109,9 @@ async def getCompPkgDeps(
     deptype: str = Query(..., regex="(?:license|cve)"),
 ) -> DepPkgs:
     try:
-        result = requests.get(
-            validateuser_url + "/msapi/validateuser", cookies=request.cookies
-        )
+        result = requests.get(validateuser_url + "/msapi/validateuser", cookies=request.cookies)
         if result is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization Failed"
-            )
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization Failed")
 
         if result.status_code != status.HTTP_200_OK:
             raise HTTPException(
@@ -241,12 +226,7 @@ async def getCompPkgDeps(
             except (InterfaceError, OperationalError) as ex:
                 if attempt < no_of_retry:
                     sleep_for = 0.2
-                    logging.error(
-                        "Database connection error: {} - sleeping for {}s"
-                        " and will retry (attempt #{} of {})".format(
-                            ex, sleep_for, attempt, no_of_retry
-                        )
-                    )
+                    logging.error("Database connection error: {} - sleeping for {}s" " and will retry (attempt #{} of {})".format(ex, sleep_for, attempt, no_of_retry))
                     # 200ms of sleep time in cons. retry calls
                     sleep(sleep_for)
                     attempt += 1
@@ -258,9 +238,7 @@ async def getCompPkgDeps(
         raise
     except Exception as err:
         print(str(err))
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err)
-        ) from None
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err)) from None
 
 
 if __name__ == "__main__":
