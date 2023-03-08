@@ -15,7 +15,6 @@
 import logging
 import os
 import socket
-from dataclasses import dataclass
 from time import sleep
 from typing import List, Optional
 
@@ -57,7 +56,6 @@ engine = create_engine(
 
 
 # health check endpoint
-@dataclass
 class StatusMsg(BaseModel):
     status: str
     service_name: str
@@ -71,20 +69,19 @@ async def health(response: Response) -> StatusMsg:
             cursor = conn.cursor()
             cursor.execute("SELECT 1")
             if cursor.rowcount > 0:
-                return StatusMsg("UP", service_name)
+                return StatusMsg(status="UP", service_name=service_name)
             response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-            return StatusMsg("DOWN", service_name)
+            return StatusMsg(status="DOWN", service_name=service_name)
 
     except Exception as err:
         print(str(err))
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-        return StatusMsg("DOWN", service_name)
+        return StatusMsg(status="DOWN", service_name=service_name)
 
 
 # end health check
 
 
-@dataclass
 class DepPkg(BaseModel):
     packagename: str
     packageversion: str
@@ -96,7 +93,6 @@ class DepPkg(BaseModel):
     risklevel: str
 
 
-@dataclass
 class DepPkgs(BaseModel):
     data: List[DepPkg]
 
@@ -108,23 +104,7 @@ async def getCompPkgDeps(
     appid: Optional[int] = None,
     deptype: str = Query(..., regex="(?:license|cve)"),
 ) -> DepPkgs:
-    try:
-        result = requests.get(validateuser_url + "/msapi/validateuser", cookies=request.cookies)
-        if result is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization Failed")
-
-        if result.status_code != status.HTTP_200_OK:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authorization Failed status_code=" + str(result.status_code),
-            )
-    except Exception as err:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authorization Failed:" + str(err),
-        ) from None
-
-    response_data = DepPkgs(List())
+    response_data = DepPkgs(data=list())
 
     try:
         # Retry logic for failed query
@@ -157,7 +137,7 @@ async def getCompPkgDeps(
                         summary = row[4]
                         fullcompname = row[5]
                         purl = row[6]
-                        pkgtype = row[7]
+                        pkgtype = row[7] if row[7] else ""
 
                         if deptype == "license":
                             if not url:
