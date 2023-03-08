@@ -104,7 +104,23 @@ async def getCompPkgDeps(
     appid: Optional[int] = None,
     deptype: str = Query(..., regex="(?:license|cve)"),
 ) -> DepPkgs:
-    response_data = DepPkgs(data=list())
+    try:
+        result = requests.get(validateuser_url + "/msapi/validateuser", cookies=request.cookies)
+        if result is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization Failed")
+
+        if result.status_code != status.HTTP_200_OK:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authorization Failed status_code=" + str(result.status_code),
+            )
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authorization Failed:" + str(err),
+        ) from None
+
+    response_data = DepPkgs(List())
 
     try:
         # Retry logic for failed query
