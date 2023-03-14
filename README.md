@@ -1,9 +1,12 @@
 # ortelius-ms-dep-pkg-r
 
+[![Super-Linter](https://github.com/ortelius/ms-dep-pkg-r/actions/workflows/build-push-chart.yml/badge.svg)](https://github.com/ortelius/ms-dep-pkg-r/actions/workflows/build-push-chart.yml)
+
 Dependency Package Data Microservice - Read
 
 This is a flask web application which returns a list of objects known as Component Dependencies when the
 endpoint `/msapi/deppkg` is accessed.
+
 
 ## Setup
 
