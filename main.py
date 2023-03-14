@@ -120,7 +120,7 @@ async def getCompPkgDeps(
             detail="Authorization Failed:" + str(err),
         ) from None
 
-    response_data = DepPkgs(List())
+    response_data = DepPkgs(data=list())
 
     try:
         # Retry logic for failed query
