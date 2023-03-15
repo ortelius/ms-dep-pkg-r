@@ -16,6 +16,8 @@ jobs:
 
     permissions:
       security-events: write
+      statuses: write
+      contents: write
 
     env:
       DHURL: https://console.deployhub.com
