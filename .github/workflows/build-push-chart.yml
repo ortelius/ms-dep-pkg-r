@@ -8,6 +8,8 @@ on:
       - "chart/ms-dep-pkg-r/Chart.yaml"
       - "chart/ms-dep-pkg-r/values.yaml"
 
+permissions: read-all
+
 jobs:
   release:
     runs-on: ubuntu-latest
