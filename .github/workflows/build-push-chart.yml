@@ -25,6 +25,7 @@ jobs:
       DHPASS: ${{ secrets.DHPASS }}
       REGISTRY: quay.io
       COMPNAME: ${{ github.event.repository.name }}
+      BRANCH: ${{ github.head_ref || github.ref_name }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@1f99358870fe1c846a3ccba386cc2b2246836776 # v2.2.1
@@ -58,13 +59,7 @@ jobs:
         run: |
           echo "CHART_VERSION=10.0.${{ github.run_number }}" >> $GITHUB_ENV
           echo "IMAGE_VERSION=10.0.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> $GITHUB_ENV
-          echo "IMAGE_TAG=${{ github.head_ref || github.ref_name }}-v10.0.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> $GITHUB_ENV
-
-      - name: Configure Git
-        id: git
-        run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          echo "IMAGE_TAG=${{ env.BRANCH }}-v10.0.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> $GITHUB_ENV
 
       - name: Login to Quay
         id: login
@@ -96,20 +91,27 @@ jobs:
 
       - name: Update Values and Chart
         id: chart
-        run: |
-            rm trivy-results.sarif
-            sudo go install github.com/mikefarah/yq/v4@latest
-            yq e '.image.repository |= "${{ env.REGISTRY }}/${{ github.repository }}"' -i chart/${{ github.event.repository.name }}/values.yaml
-            yq e '.image.tag |= "${{ env.IMAGE_TAG }}"' -i chart/${{ github.event.repository.name }}/values.yaml
-            yq e '.image.sha |= "${{ steps.build.outputs.digest }}"' -i chart/${{ github.event.repository.name }}/values.yaml
-            yq e '.version |= "${{ env.CHART_VERSION }}"' -i chart/${{ github.event.repository.name }}/Chart.yaml
-            yq e '.appVersion |= "${{ env.CHART_VERSION }}"' -i chart/${{ github.event.repository.name }}/Chart.yaml
-            echo "DIGEST=${{ steps.build.outputs.digest }}" >> $GITHUB_ENV
-
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@3ea6ae190baf489ba007f7c92608f33ce20ef04a # v4.16.0
+        uses: fjogeleit/yaml-update-action@main
         with:
-          commit_message: Update chart and values
+          message: "Update Image Version to ${{ steps.image.outputs.version }}"
+          commitUserName: "$GITHUB_ACTOR"
+          commitUserEmail: "$GITHUB_ACTOR@users.noreply.github.com"
+          branch: main
+          masterBranchName: main
+          changes: |
+            {
+              "chart/${{ github.event.repository.name }}/values.yaml":
+              {
+                "image.repository": "${{ env.REGISTRY }}/${{ github.repository }}",
+                "image.tag": "${{ env.IMAGE_TAG }}",
+                "image.sha": "${{ steps.build.outputs.digest }}"
+              },
+              "chart/${{ github.event.repository.name }}/Chart.yaml":
+              {
+                "version": "${{ env.CHART_VERSION }}",
+                "appVersion": "${{ env.CHART_VERSION }}"
+              }
+            }
 
       - name: Generate SBOM
         id: sbom
@@ -120,6 +122,8 @@ jobs:
 
       - name: Update Compnent
         id: updatecomp
+        env:
+          DIGEST: "${{ steps.build.outputs.digest }}"
         run: |
           pip install ortelius-cli
           dh envscript --envvars component.toml --envvars_sh env.sh
