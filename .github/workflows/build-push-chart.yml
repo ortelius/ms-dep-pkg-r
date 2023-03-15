@@ -89,6 +89,7 @@ jobs:
       - name: Update Values and Chart
         id: chart
         run: |
+            rm trivy-results.sarif
             sudo go install github.com/mikefarah/yq/v4@latest
             yq e '.image.repository |= "${{ env.REGISTRY }}/${{ github.repository }}"' -i chart/${{ github.event.repository.name }}/values.yaml
             yq e '.image.tag |= "${{ env.IMAGE_TAG }}"' -i chart/${{ github.event.repository.name }}/values.yaml
