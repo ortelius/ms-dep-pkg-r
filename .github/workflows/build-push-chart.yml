@@ -61,6 +61,12 @@ jobs:
           echo "IMAGE_VERSION=10.0.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> $GITHUB_ENV
           echo "IMAGE_TAG=${{ env.BRANCH }}-v10.0.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> $GITHUB_ENV
 
+      - name: Configure Git
+        id: git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
       - name: Login to Quay
         id: login
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # v2.1.0
@@ -91,7 +97,7 @@ jobs:
 
       - name: Update Values and Chart
         id: chart
-        uses: fjogeleit/yaml-update-action@main
+        uses: fjogeleit/yaml-update-action@d98ee6a10a971effea75480e3f315e4dacc89a23 # main
         with:
           message: "Update Image Version to ${{ steps.image.outputs.version }}"
           commitUserName: "$GITHUB_ACTOR"
