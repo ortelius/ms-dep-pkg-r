@@ -18,9 +18,14 @@ jobs:
       REGISTRY: quay.io
       COMPNAME: ${{ github.event.repository.name }}
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@1f99358870fe1c846a3ccba386cc2b2246836776 # v2.2.1
+        with:
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
       - name: Checkout
         id: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
         with:
           fetch-depth: 2
 
@@ -28,7 +33,7 @@ jobs:
       # Run Linter against code base #
       ################################
       - name: Lint Code Base
-        uses: github/super-linter/slim@v4
+        uses: github/super-linter/slim@985ef206aaca4d560cb9ee2af2b42ba44adc1d55 # v4.10.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_PYTHON: true
@@ -55,7 +60,7 @@ jobs:
 
       - name: Login to Quay
         id: login
-        uses: docker/login-action@v2
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # v2.1.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ secrets.QUAY_USERID }}
@@ -63,20 +68,20 @@ jobs:
 
       - name: Build and Push Docker Image
         id: build
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@1104d471370f9806843c095c1db02b5a90c5f8b6 # v3.3.1
         with:
           push: true
           tags: ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.IMAGE_TAG }}
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@1f0aa582c8c8f5f7639610d6d38baddfea4fdcee # master
         with:
           image-ref: ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.IMAGE_TAG }}
           format: 'sarif'
           output: 'trivy-results.sarif'
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@168b99b3c22180941ae7dbdd5f5c9678ede476ba # v2.2.7
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
@@ -93,7 +98,7 @@ jobs:
             echo "DIGEST=${{ steps.build.outputs.digest }}" >> $GITHUB_ENV
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@3ea6ae190baf489ba007f7c92608f33ce20ef04a # v4.16.0
         with:
           commit_message: Update chart and values
 
@@ -113,19 +118,34 @@ jobs:
           dh updatecomp --rsp component.toml --deppkg cyclonedx@cyclonedx.json
 
       - name: Install Helm
-        uses: azure/setup-helm@v3
+        uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # v3.5
         with:
           version: v3.10.0
 
+      - name: Prepare GPG key
+        run: |
+          gpg_dir=.cr-gpg
+          mkdir "$gpg_dir"
+          keyring="$gpg_dir/secring.gpg"
+          base64 -d <<< "$GPG_KEYRING_BASE64" > "$keyring"
+          passphrase_file="$gpg_dir/passphrase"
+          echo "$GPG_PASSPHRASE" > "$passphrase_file"
+          echo "CR_PASSPHRASE_FILE=$passphrase_file" >> "$GITHUB_ENV"
+          echo "CR_KEYRING=$keyring" >> "$GITHUB_ENV"
+        env:
+          GPG_KEYRING_BASE64: "${{ secrets.GPG_KEYRING_BASE64 }}"
+          GPG_PASSPHRASE: "${{ secrets.GPG_PASSPHRASE }}"
+
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.4.1
+        uses: helm/chart-releaser-action@98bccfd32b0f76149d188912ac8e45ddd3f8695f # v1.4.1
         with:
           charts_dir: chart
+          config: .github/workflows/cr.yaml
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Trigger Rebuild of Main Chart
-        uses: benc-uk/workflow-dispatch@v1
+        uses: benc-uk/workflow-dispatch@798e70c97009500150087d30d9f11c5444830385 # v1.2.2
         with:
           workflow: generate-main-chart.yml
           repo: ortelius/ortelius-charts
