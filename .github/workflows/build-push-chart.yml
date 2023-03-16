@@ -100,8 +100,8 @@ jobs:
         uses: fjogeleit/yaml-update-action@d98ee6a10a971effea75480e3f315e4dacc89a23 # main
         with:
           message: "Update Image Version to ${{ steps.image.outputs.version }}"
-          commitUserName: "${{ env.GITHUB_ACTOR }}"
-          commitUserEmail: "${{ env.GITHUB_ACTOR }}@users.noreply.github.com"
+          commitUserName: $GITHUB_ACTOR
+          commitUserEmail: $GITHUB_ACTOR@users.noreply.github.com
           branch: main
           masterBranchName: main
           changes: |
