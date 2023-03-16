@@ -124,6 +124,7 @@ jobs:
         id: sbom
         with:
           format: cyclonedx-json
+          output-file: /workspace
           artifact-name: cyclonedx.json
           image: ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.IMAGE_TAG }}
 
