@@ -1,0 +1,20 @@
+# Configuration file for MegaLinter
+# See all available variables at https://megalinter.io/configuration/ and in linters documentation
+
+APPLY_FIXES: all # all, none, or list of linter keys
+# ENABLE: # If you use ENABLE variable, all other languages/formats/tooling-formats will be disabled by default
+# ENABLE_LINTERS: # If you use ENABLE_LINTERS variable, all other linters will be disabled by default
+DISABLE:
+  - COPYPASTE
+  - SPELL
+
+SHOW_ELAPSED_TIME: true
+FILEIO_REPORTER: false
+PYTHON_BLACK_CONFIG_FILE: .python-black
+YAML_PRETTIER_FILTER_REGEX_EXCLUDE: templates/
+YAML_YAMLLINT_FILTER_REGEX_EXCLUDE: templates/
+DISABLE_LINTERS:
+  - REPOSITORY_DUSTILOCK
+  - REPOSITORY_GIT_DIFF
+  - REPOSITORY_TRIVY
+# DISABLE_ERRORS: true # Uncomment if you want MegaLinter to detect errors but not block CI to pass
