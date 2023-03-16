@@ -1,3 +1,4 @@
+---
 # cr.yaml
 # Set to true for GPG signing
 sign: true
