@@ -124,13 +124,9 @@ jobs:
         id: sbom
         with:
           format: cyclonedx-json
+          output-file: /tmp
           artifact-name: cyclonedx.json
           image: ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.IMAGE_TAG }}
-
-      - name: Find
-        id: find
-        run: |
-          find / -name cyclonedx.json -print
 
       - name: Update Compnent
         id: updatecomp
@@ -140,7 +136,7 @@ jobs:
           pip install ortelius-cli
           dh envscript --envvars component.toml --envvars_sh env.sh
           source env.sh
-          dh updatecomp --rsp component.toml --deppkg cyclonedx@/home/runner/work/cyclonedx.json
+          dh updatecomp --rsp component.toml --deppkg cyclonedx@/tmp/cyclonedx.json
 
       - name: Install Helm
         uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # v3.5
