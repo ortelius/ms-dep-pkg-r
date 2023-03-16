@@ -17,13 +17,13 @@ endpoint `/msapi/deppkg` is accessed.
 The project requires a Postgres server to be running. This can be done by either installing Postgres directly on
 your machine and making available the following environmental variables for your python application:
 
-| Environmental Variable | Description |
-| --------- | --------- |
-| DB_NAME | The name of the database you have created for the purpose of this project |
-| DB_HOST | The hostname of the database server |
-| DB_USER | The username that would be used to access the database |
-| DB_PASSWORD | The password to the database attached to the provided above user |
-| DB_PORT | The port that the postgres server run on. Usually 5432. |
+| Environmental Variable | Description                                                               |
+|------------------------|---------------------------------------------------------------------------|
+| DB_NAME                | The name of the database you have created for the purpose of this project |
+| DB_HOST                | The hostname of the database server                                       |
+| DB_USER                | The username that would be used to access the database                    |
+| DB_PASSWORD            | The password to the database attached to the provided above user          |
+| DB_PORT                | The port that the postgres server run on. Usually 5432.                   |
 
 You can make these environmental variables by creating a `.env` file (will be ignored by git) in the
 project root and filling with the required environmental variables like as shown below (these are
