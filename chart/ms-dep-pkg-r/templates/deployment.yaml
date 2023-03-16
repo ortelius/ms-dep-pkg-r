@@ -1,3 +1,4 @@
+---
 # Copyright (c) 2021 Linux Foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,23 +16,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: { { include "ms-dep-pkg-r.name" . } }
+  name: {{ include "ms-dep-pkg-r.name" . }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: { { include "ms-dep-pkg-r.name" . } }
+      app: {{ include "ms-dep-pkg-r.name" . }}
       tier: backend
       track: stable
   template:
     metadata:
       labels:
-        app: { { include "ms-dep-pkg-r.name" . } }
+        app: {{ include "ms-dep-pkg-r.name" . }}
         tier: backend
         track: stable
     spec:
       containers:
-        - name: { { include "ms-dep-pkg-r.name" . } }
+        - name: {{ include "ms-dep-pkg-r.name" . }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: Always
           env:
