@@ -90,8 +90,6 @@ jobs:
         with:
           format: cyclonedx-json
           output-file: /tmp/cyclonedx.json
-          upload-artifact: false
-          upload-release-assets: false
           image: ${{ needs.setenv.outputs.image_repo_tag }}
 
       - name: Update Compnent
