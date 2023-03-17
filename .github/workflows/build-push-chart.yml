@@ -21,6 +21,7 @@ jobs:
       image_version: ${{ steps.env.outputs.image_version }}
       image_tag: ${{ steps.env.outputs.image_tag }}
       image_repo_tag: ${{ steps.env.outputs.image_repo_tag }}
+      image_repository: ${{ steps.env.outputs.image_repository }}
       registry: ${{ steps.env.outputs.registry }}
       branch: ${{ steps.env.outputs.branch }}
       compname: ${{ steps.env.outputs.compname }}
@@ -38,19 +39,18 @@ jobs:
         env:
           DHURL: https://console.deployhub.com
           REGISTRY: quay.io
-          BASE_VERSION: "10.0"
         run: |
+          BASE_VERSION=$(cat chart/${{ github.event.repository.name }}/Chart.yaml | grep version: | cut -f2 -d: | cut -f1-2 -d.)
           echo "dhurl=${{ env.DHURL }}" >> "$GITHUB_OUTPUT"
           echo "branch=${{ github.head_ref || github.ref_name }}" >> "$GITHUB_OUTPUT"
-          echo "chart_version=${{ env.BASE_VERSION }}.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          echo "chart_version=${BASE_VERSION}.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
           echo "compname=${{ github.event.repository.name }}" >> "$GITHUB_OUTPUT"
-          echo "image_repo_tag=${{ env.REGISTRY }}/${{ github.repository }}:${{ github.head_ref || github.ref_name }}-v${{ env.BASE_VERSION }}.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
+          echo "image_repo_tag=${{ env.REGISTRY }}/${{ github.repository }}:${{ github.head_ref || github.ref_name }}-v${BASE_VERSION}.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
           echo "image_repository=${{ env.REGISTRY }}/${{ github.repository }}" >> "$GITHUB_OUTPUT"
-          echo "image_tag=${{ github.head_ref || github.ref_name }}-v${{ env.BASE_VERSION }}.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
-          echo "image_version=${{ env.BASE_VERSION }}.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
+          echo "image_tag=${{ github.head_ref || github.ref_name }}-v${BASE_VERSION}.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
+          echo "image_version=${BASE_VERSION}.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
           echo "registry=${{ env.REGISTRY }}" >> "$GITHUB_OUTPUT"
           echo "short_sha=$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
-          cat "$GITHUB_OUTPUT" | base64
 
   release:
     runs-on: ubuntu-latest
@@ -149,11 +149,11 @@ jobs:
             {
               "chart/${{ github.event.repository.name }}/values.yaml":
               {
-                "image.repository": "${{ needs.setenv.outputs.repository }}",
+                "image.repository": "${{ needs.setenv.outputs.image_repository }}",
                 "image.tag": "${{ needs.setenv.outputs.image_tag }}",
                 "image.sha": "${{ needs.release.outputs.digest }}"
               },
-              "chart/${{ github.event.repository.name }}/Chart.yaml":
+              "chart/${{ needs.setenv.outputs.compname }}/Chart.yaml":
               {
                 "version": "${{ needs.setenv.outputs.chart_version }}",
                 "appVersion": "${{ needs.setenv.outputs.chart_version }}"
@@ -206,6 +206,7 @@ jobs:
         with:
           format: cyclonedx-json
           output-file: /tmp/cyclonedx.json
+          artifact-name: cyclonedx.json
           upload-artifact: false
           upload-release-assets: false
           image: ${{ needs.setenv.outputs.image_repo_tag }}
@@ -226,8 +227,7 @@ jobs:
           SHORT_SHA: ${{ needs.setenv.outputs.short_sha }}
 
         run: |
-          env | sort
-          cat /tmp/cyclonedx.json
+          find / -name cyclonedx.json -print
           pip install ortelius-cli
           dh envscript --envvars component.toml --envvars_sh env.sh
           source env.sh
