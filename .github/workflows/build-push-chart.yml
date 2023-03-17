@@ -83,9 +83,6 @@ jobs:
         with:
           push: true
           tags: ${{ needs.setenv.outputs.image_repo_tag }}
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
 
       - name: Generate SBOM
         uses: anchore/sbom-action@07978da4bdb4faa726e52dfc6b1bed63d4b56479 # v0.13.3
