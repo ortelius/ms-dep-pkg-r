@@ -22,12 +22,8 @@ jobs:
       image_tag: ${{ steps.env.outputs.image_tag }}
       image_repo_tag: ${{ steps.env.outputs.image_repo_tag }}
       registry: ${{ steps.env.outputs.registry }}
-      quay_user: ${{ steps.env.outputs.quay_user }}
-      quay_pass: ${{ steps.env.outputs.quay_pass }}
       branch: ${{ steps.env.outputs.branch }}
       compname: ${{ steps.env.outputs.compname }}
-      dhuser: ${{ steps.env.outputs.dhuser }}
-      dhpass: ${{ steps.env.outputs.dhpass }}
       dhurl: ${{ steps.env.outputs.dhurl }}
 
     steps:
@@ -44,8 +40,6 @@ jobs:
           REGISTRY: quay.io
           BASE_VERSION: "10.0"
         run: |
-          echo "dhuser=\"${{ secrets.DHUSER }}\"" >> "$GITHUB_OUTPUT"
-          echo "dhpass=\"${{ secrets.DHPASS }}\"" >> "$GITHUB_OUTPUT"
           echo "dhurl=${{ env.DHURL }}" >> "$GITHUB_OUTPUT"
           echo "branch=${{ github.head_ref || github.ref_name }}" >> "$GITHUB_OUTPUT"
           echo "chart_version=${{ env.BASE_VERSION }}.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
@@ -54,8 +48,6 @@ jobs:
           echo "image_repository=${{ env.REGISTRY }}/${{ github.repository }}" >> "$GITHUB_OUTPUT"
           echo "image_tag=${{ github.head_ref || github.ref_name }}-v${{ env.BASE_VERSION }}.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
           echo "image_version=${{ env.BASE_VERSION }}.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
-          echo "quay_pass=\"${{ secrets.QUAY_PASSWORD }}\"" >> "$GITHUB_OUTPUT"
-          echo "quay_user=\"${{ secrets.QUAY_USERID }}\"" >> "$GITHUB_OUTPUT"
           echo "registry=${{ env.REGISTRY }}" >> "$GITHUB_OUTPUT"
           echo "short_sha=$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
           cat "$GITHUB_OUTPUT" | base64
@@ -82,8 +74,8 @@ jobs:
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # v2.1.0
         with:
           registry: ${{ needs.setenv.outputs.registry }}
-          username: ${{ needs.setenv.outputs.quay_user }}
-          password: ${{ needs.setenv.outputs.quay_pass }}
+          username: ${{ secrets.QUAY_USERID }}
+          password: ${{ secrets.QUAY_PASSWORD }}
 
       - name: Build and Push Docker Image
         id: build
@@ -222,8 +214,8 @@ jobs:
         id: updatecomp
         env:
           DHURL: ${{ needs.release.outputs.dhurl }}
-          DHUSER: ${{ needs.release.outputs.dhuser }}
-          DHPASS: ${{ needs.release.outputs.dhpass }}
+          DHUSER: ${{ secrets.DHUSER }}
+          DHPASS: ${{ secrets.DHPASS }}
           BRANCH: ${{ needs.release.outputs.branch }}
           CHART_VERSION: ${{ needs.setenv.outputs.chart_version }}
           COMPNAME: ${{ needs.release.outputs.compname }}
