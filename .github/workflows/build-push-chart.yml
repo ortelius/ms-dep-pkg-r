@@ -42,10 +42,10 @@ jobs:
         env:
           DHURL: https://console.deployhub.com
           REGISTRY: quay.io
-          BASE_VERSION: 10.0
+          BASE_VERSION: "10.0"
         run: |
-          echo "dhuser=${{ secrets.DHUSER }}" >> "$GITHUB_OUTPUT"
-          echo "dhpass=${{ secrets.DHPASS }}" >> "$GITHUB_OUTPUT"
+          echo "dhuser=\"${{ secrets.DHUSER }}\"" >> "$GITHUB_OUTPUT"
+          echo "dhpass=\"${{ secrets.DHPASS }}\"" >> "$GITHUB_OUTPUT"
           echo "dhurl=${{ env.DHURL }}" >> "$GITHUB_OUTPUT"
           echo "branch=${{ github.head_ref || github.ref_name }}" >> "$GITHUB_OUTPUT"
           echo "chart_version=${{ env.BASE_VERSION }}.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
@@ -54,8 +54,8 @@ jobs:
           echo "image_repository=${{ env.REGISTRY }}/${{ github.repository }}" >> "$GITHUB_OUTPUT"
           echo "image_tag=${{ github.head_ref || github.ref_name }}-v${{ env.BASE_VERSION }}.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
           echo "image_version=${{ env.BASE_VERSION }}.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
-          echo "quay_pass=${{ secrets.QUAY_PASSWORD }}" >> "$GITHUB_OUTPUT"
-          echo "quay_user=${{ secrets.QUAY_USERID }}" >> "$GITHUB_OUTPUT"
+          echo "quay_pass=\"${{ secrets.QUAY_PASSWORD }}\"" >> "$GITHUB_OUTPUT"
+          echo "quay_user=\"${{ secrets.QUAY_USERID }}\"" >> "$GITHUB_OUTPUT"
           echo "registry=${{ env.REGISTRY }}" >> "$GITHUB_OUTPUT"
           echo "short_sha=$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
           cat "$GITHUB_OUTPUT" | base64
