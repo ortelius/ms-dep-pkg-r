@@ -3,5 +3,5 @@ description: Dependency Packages
 icon: https://ortelius.github.io/ortelius-charts/logo.png
 name: ms-dep-pkg-r
 type: application
-version: 10.0.78
-appVersion: 10.0.78
+version: 10.0.81
+appVersion: 10.0.81
