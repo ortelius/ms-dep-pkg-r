@@ -11,16 +11,6 @@ on:
 
 permissions: read-all
 
-env:
-  BRANCH: ${{ github.head_ref || github.ref_name }}
-  COMPNAME: ${{ github.event.repository.name }}
-  DHPASS: ${{ secrets.DHPASS }}
-  DHURL: https://console.deployhub.com
-  DHUSER: ${{ secrets.DHUSER }}
-  QUAY_PASS: ${{ secrets.QUAY_PASSWORD }}
-  QUAY_USER: ${{ secrets.QUAY_USERID }}
-  REGISTRY: quay.io
-
 jobs:
   setenv:
     runs-on: ubuntu-latest
@@ -34,6 +24,11 @@ jobs:
       registry: ${{ steps.env.outputs.registry }}
       quay_user: ${{ steps.env.outputs.quay_user }}
       quay_pass: ${{ steps.env.outputs.quay_pass }}
+      branch: ${{ steps.env.outputs.branch }}
+      compname: ${{ steps.env.outputs.compname }}
+      dhuser: ${{ steps.env.outputs.dhuser }}
+      dhpass: ${{ steps.env.outputs.dhpass }}
+      dhurl: ${{ steps.env.outputs.dhurl }}
 
     steps:
       - name: Checkout
@@ -44,15 +39,25 @@ jobs:
 
       - name: Export env
         id: env
+        env:
+          DHURL: https://console.deployhub.com
+          REGISTRY: quay.io
+          BASE_VERSION: 10.0
         run: |
-          echo "short_sha=$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
-          echo "chart_version=10.0.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
-          echo "image_version=10.0.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
-          echo "image_tag=${{ env.BRANCH }}-v10.0.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
-          echo "image_repo_tag=${{ env.REGISTRY }}/${{ github.repository }}:${{ env.BRANCH }}-v10.0.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
+          echo "dhuser=${{ secrets.DHUSER }}" >> "$GITHUB_OUTPUT"
+          echo "dhpass=${{ secrets.DHPASS }}" >> "$GITHUB_OUTPUT"
+          echo "dhurl=${{ env.DHURL }}" >> "$GITHUB_OUTPUT"
+          echo "branch=${{ github.head_ref || github.ref_name }}" >> "$GITHUB_OUTPUT"
+          echo "chart_version=${{ env.BASE_VERSION }}.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          echo "compname=${{ github.event.repository.name }}" >> "$GITHUB_OUTPUT"
+          echo "image_repo_tag=${{ env.REGISTRY }}/${{ github.repository }}:${{ github.head_ref || github.ref_name }}-v${{ env.BASE_VERSION }}.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
+          echo "image_repository=${{ env.REGISTRY }}/${{ github.repository }}" >> "$GITHUB_OUTPUT"
+          echo "image_tag=${{ github.head_ref || github.ref_name }}-v${{ env.BASE_VERSION }}.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
+          echo "image_version=${{ env.BASE_VERSION }}.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
+          echo "quay_pass=${{ secrets.QUAY_PASSWORD }}" >> "$GITHUB_OUTPUT"
+          echo "quay_user=${{ secrets.QUAY_USERID }}" >> "$GITHUB_OUTPUT"
           echo "registry=${{ env.REGISTRY }}" >> "$GITHUB_OUTPUT"
-          echo "quay_user=${{ env.QUAY_USER }}" >> "$GITHUB_OUTPUT"
-          echo "quay_pass=${{ env.QUAY_PASS }}" >> "$GITHUB_OUTPUT"
+          echo "short_sha=$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
           cat "$GITHUB_OUTPUT" | base64
 
   release:
@@ -152,7 +157,7 @@ jobs:
             {
               "chart/${{ github.event.repository.name }}/values.yaml":
               {
-                "image.repository": "${{ needs.setenv.outputs.registry }}/${{ github.repository }}",
+                "image.repository": "${{ needs.setenv.outputs.repository }}",
                 "image.tag": "${{ needs.setenv.outputs.image_tag }}",
                 "image.sha": "${{ needs.release.outputs.digest }}"
               },
@@ -216,12 +221,18 @@ jobs:
       - name: Update Compnent
         id: updatecomp
         env:
-          SHORT_SHA: ${{ needs.setenv.outputs.short_sha }}
+          DHURL: ${{ needs.release.outputs.dhurl }}
+          DHUSER: ${{ needs.release.outputs.dhuser }}
+          DHPASS: ${{ needs.release.outputs.dhpass }}
+          BRANCH: ${{ needs.release.outputs.branch }}
           CHART_VERSION: ${{ needs.setenv.outputs.chart_version }}
-          IMAGE_VERSION: ${{ needs.setenv.outputs.image_version }}
-          IMAGE_TAG: ${{ needs.setenv.outputs.image_tag }}
-          IMAGE_REPO_TAG: ${{ needs.setenv.outputs.image_repo_tag }}
+          COMPNAME: ${{ needs.release.outputs.compname }}
           DIGEST: ${{ needs.release.outputs.digest }}
+          IMAGE_REPO_TAG: ${{ needs.setenv.outputs.image_repo_tag }}
+          IMAGE_TAG: ${{ needs.setenv.outputs.image_tag }}
+          IMAGE_VERSION: ${{ needs.setenv.outputs.image_version }}
+          SHORT_SHA: ${{ needs.setenv.outputs.short_sha }}
+
         run: |
           env | sort
           pip install ortelius-cli
