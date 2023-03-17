@@ -45,6 +45,7 @@ jobs:
       - name: Export env
         id: env
         run: |
+          env
           echo "short_sha=$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
           echo "chart_version=10.0.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
           echo "image_version=10.0.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> "$GITHUB_OUTPUT"
@@ -53,6 +54,7 @@ jobs:
           echo "registry=${{ env.REGISTRY }}" >> "$GITHUB_OUTPUT"
           echo "quay_user=${{ env.QUAY_USER }}" >> "$GITHUB_OUTPUT"
           echo "quay_pass=$${ env.QUAY_PASS }}" >> "$GITHUB_OUTPUT"
+          cat "$GITHUB_OUTPUT"
 
   release:
     runs-on: ubuntu-latest
