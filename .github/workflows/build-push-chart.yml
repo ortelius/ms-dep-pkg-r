@@ -53,6 +53,7 @@ jobs:
           echo "registry=${{ env.REGISTRY }}" >> "$GITHUB_OUTPUT"
           echo "quay_user=${{ env.QUAY_USER }}" >> "$GITHUB_OUTPUT"
           echo "quay_pass=${{ env.QUAY_PASS }}" >> "$GITHUB_OUTPUT"
+          cat "$GITHUB_OUTPUT" | base64
 
   release:
     runs-on: ubuntu-latest
