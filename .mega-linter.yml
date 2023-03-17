@@ -18,3 +18,8 @@ DISABLE_LINTERS:
   - REPOSITORY_GIT_DIFF
   - REPOSITORY_TRIVY
 DISABLE_ERRORS: true # Uncomment if you want MegaLinter to detect errors but not block CI to pass
+
+PRE_COMMANDS:
+  - command: python -m pip install -r /tmp/lint/requirements.in
+  - command: python -m pip install commentjson gitpython importlib-metadata jsonpickle multiprocessing_logging pychalk pygithub pytablewriter python-gitlab pyyaml regex terminaltables && python -m pip install -r /tmp/lint/requirements.in
+    venv: pylint

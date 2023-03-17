@@ -7,7 +7,6 @@ Dependency Package Data Microservice - Read
 This is a flask web application which returns a list of objects known as Component Dependencies when the
 endpoint `/msapi/deppkg` is accessed.
 
-
 ## Setup
 
 - Clone the repository on your local computer
@@ -29,7 +28,7 @@ You can make these environmental variables by creating a `.env` file (will be ig
 project root and filling with the required environmental variables like as shown below (these are
 injected into the docker container at runtime):
 
-```text
+```shell
 DB_HOST=localhost
 DB_NAME=db
 DB_PASSWORD=password
@@ -53,21 +52,7 @@ The flask application has been dockerized and can be utilized by following the s
   docker run -p 5000:5000 --env-file .env -d comp-dep
   ```
 
-- You should be able to access the web page at [localhost:5000](http://www.localhost:5000/) and the list of
-component dependencies in json at [http://localhost:5000/msapi/deppkg](http://localhost:5000/msapi/deppkg)
-
-------------------------------------------
-
-Another option is to make use of [Docker compose](https://docs.docker.com/compose/) to start up the project
-at once. You can simply run:
-
-```shell
-docker-compose up --build
-```
-
-This command starts up the database server, the flask application and seeds the database with dummy data.
-Once you do this, you should be able to access the web page at [localhost:5000](http://www.localhost:5000/).
-And hitting [http://localhost:5000/msapi/deppkg](http://localhost:5000/msapi/deppkg) should return a response like this:
+- You should be able to access the REST API endpoint by hitting `http://localhost:5004/msapi/deppkg` should return a response like this:
 
 ```json
 [
