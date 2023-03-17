@@ -213,12 +213,12 @@ jobs:
       - name: Update Compnent
         id: updatecomp
         env:
-          DHURL: ${{ needs.release.outputs.dhurl }}
+          DHURL: ${{ needs.setenv.outputs.dhurl }}
           DHUSER: ${{ secrets.DHUSER }}
           DHPASS: ${{ secrets.DHPASS }}
-          BRANCH: ${{ needs.release.outputs.branch }}
+          BRANCH: ${{ needs.setenv.outputs.branch }}
           CHART_VERSION: ${{ needs.setenv.outputs.chart_version }}
-          COMPNAME: ${{ needs.release.outputs.compname }}
+          COMPNAME: ${{ needs.setenv.outputs.compname }}
           DIGEST: ${{ needs.release.outputs.digest }}
           IMAGE_REPO_TAG: ${{ needs.setenv.outputs.image_repo_tag }}
           IMAGE_TAG: ${{ needs.setenv.outputs.image_tag }}
@@ -227,6 +227,7 @@ jobs:
 
         run: |
           env | sort
+          cat /tmp/cyclonedx.json
           pip install ortelius-cli
           dh envscript --envvars component.toml --envvars_sh env.sh
           source env.sh
