@@ -11,17 +11,49 @@ on:
 
 permissions: read-all
 
+env:
+  BRANCH: ${{ github.head_ref || github.ref_name }}
+  COMPNAME: ${{ github.event.repository.name }}
+  DHPASS: ${{ secrets.DHPASS }}
+  DHURL: https://console.deployhub.com
+  DHUSER: ${{ secrets.DHUSER }}
+  QUAY_PASS: ${{ secrets.QUAY_PASSWORD }}
+  QUAY_USER: ${{ secrets.QUAY_USERID }}
+  REGISTRY: quay.io
+
 jobs:
-  release:
+  setenv:
     runs-on: ubuntu-latest
 
-    env:
-      DHURL: https://console.deployhub.com
-      DHUSER: ${{ secrets.DHUSER }}
-      DHPASS: ${{ secrets.DHPASS }}
-      REGISTRY: quay.io
-      COMPNAME: ${{ github.event.repository.name }}
-      BRANCH: ${{ github.head_ref || github.ref_name }}
+    outputs:
+      short_sha: ${{ steps.short-sha.outputs.sha }}
+      chart_version: 10.0.${{ github.run_number }}
+      image_version: 10.0.${{ github.run_number }}-g${{ steps.short-sha.outputs.sha }}
+      image_tag: ${{ env.BRANCH }}-v10.0.${{ github.run_number }}-g${{ steps.short-sha.outputs.sha }}
+      image_repo_tag: ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.BRANCH }}-v10.0.${{ github.run_number }}-g${{ steps.short-sha.outputs.sha }}
+      registry: ${{ env.REGISTRY }}
+      quay_user: ${{ env.QUAY_USER }}
+      quay_pass: $${ env.QUAY_PASS }}
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+        with:
+          fetch-depth: 1
+
+      - uses: benjlevesque/short-sha@v2.1
+        id: short-sha
+        with:
+          length: 6
+
+  release:
+    runs-on: ubuntu-latest
+    needs: setenv
+
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@1f99358870fe1c846a3ccba386cc2b2246836776 # v2.2.1
@@ -31,46 +63,29 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
-        with:
-          fetch-depth: 0
-
-      - name: Set Convenience Env Vars
-        id: env
-        run: |
-          echo "CHART_VERSION=10.0.${{ github.run_number }}" >> $GITHUB_ENV
-          echo "IMAGE_VERSION=10.0.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> $GITHUB_ENV
-          echo "IMAGE_TAG=${{ env.BRANCH }}-v10.0.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> $GITHUB_ENV
 
       - name: Login to Quay
         id: login
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # v2.1.0
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.QUAY_USERID }}
-          password: ${{ secrets.QUAY_PASSWORD }}
+          registry: ${{ needs.setenv.outputs.registry }}
+          username: ${{ needs.setenv.outputs.quay_user }}
+          password: ${{ needs.setenv.outputs.quay_pass }}
 
       - name: Build and Push Docker Image
         id: build
         uses: docker/build-push-action@1104d471370f9806843c095c1db02b5a90c5f8b6 # v3.3.1
         with:
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.IMAGE_TAG }}
+          tags: ${{ needs.setenv.outputs.image_repo_tag }}
 
   trivy:
     runs-on: ubuntu-latest
-    needs: release
+    needs: [setenv, release]
 
     permissions:
       security-events: write
       statuses: write
-
-    env:
-      DHURL: https://console.deployhub.com
-      DHUSER: ${{ secrets.DHUSER }}
-      DHPASS: ${{ secrets.DHPASS }}
-      REGISTRY: quay.io
-      COMPNAME: ${{ github.event.repository.name }}
-      BRANCH: ${{ github.head_ref || github.ref_name }}
 
     steps:
       - name: Harden Runner
@@ -78,17 +93,10 @@ jobs:
         with:
           egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
 
-      - name: Set Convenience Env Vars
-        id: env
-        run: |
-          echo "CHART_VERSION=10.0.${{ github.run_number }}" >> $GITHUB_ENV
-          echo "IMAGE_VERSION=10.0.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> $GITHUB_ENV
-          echo "IMAGE_TAG=${{ env.BRANCH }}-v10.0.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> $GITHUB_ENV
-
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@1f0aa582c8c8f5f7639610d6d38baddfea4fdcee # master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.IMAGE_TAG }}
+          image-ref: ${{ needs.setenv.outputs.image_repo_tag }}
           format: "sarif"
           output: "trivy-results.sarif"
 
@@ -100,20 +108,12 @@ jobs:
 
   helm:
     runs-on: ubuntu-latest
-    needs: release
+    needs: [setenv, release]
 
     permissions:
       security-events: write
       statuses: write
       contents: write
-
-    env:
-      DHURL: https://console.deployhub.com
-      DHUSER: ${{ secrets.DHUSER }}
-      DHPASS: ${{ secrets.DHPASS }}
-      REGISTRY: quay.io
-      COMPNAME: ${{ github.event.repository.name }}
-      BRANCH: ${{ github.head_ref || github.ref_name }}
 
     steps:
       - name: Harden Runner
@@ -124,15 +124,6 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
-        with:
-          fetch-depth: 0
-
-      - name: Set Convenience Env Vars
-        id: env
-        run: |
-          echo "CHART_VERSION=10.0.${{ github.run_number }}" >> $GITHUB_ENV
-          echo "IMAGE_VERSION=10.0.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> $GITHUB_ENV
-          echo "IMAGE_TAG=${{ env.BRANCH }}-v10.0.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> $GITHUB_ENV
 
       - name: Configure Git
         id: git
@@ -144,7 +135,7 @@ jobs:
         id: chart
         uses: fjogeleit/yaml-update-action@d98ee6a10a971effea75480e3f315e4dacc89a23 # main
         with:
-          message: "Update Image Version to ${{ steps.image.outputs.version }}"
+          message: "Update Image Version to ${{ needs.setenv.outputs.image_tag }}"
           commitUserName: $GITHUB_ACTOR
           commitUserEmail: $GITHUB_ACTOR@users.noreply.github.com
           branch: main
@@ -153,14 +144,14 @@ jobs:
             {
               "chart/${{ github.event.repository.name }}/values.yaml":
               {
-                "image.repository": "${{ env.REGISTRY }}/${{ github.repository }}",
-                "image.tag": "${{ env.IMAGE_TAG }}",
-                "image.sha": "${{ steps.build.outputs.digest }}"
+                "image.repository": "${{ needs.setenv.outputs.registry }}/${{ github.repository }}",
+                "image.tag": "${{ needs.setenv.outputs.image_tag }}",
+                "image.sha": "${{ needs.release.outputs.digest }}"
               },
               "chart/${{ github.event.repository.name }}/Chart.yaml":
               {
-                "version": "${{ env.CHART_VERSION }}",
-                "appVersion": "${{ env.CHART_VERSION }}"
+                "version": "${{ needs.setenv.outputs.chart_version }}",
+                "appVersion": "${{ needs.setenv.outputs.chart_version }}"
               }
             }
       - name: Install Helm
@@ -192,15 +183,7 @@ jobs:
 
   sbom:
     runs-on: ubuntu-latest
-    needs: release
-
-    env:
-      DHURL: https://console.deployhub.com
-      DHUSER: ${{ secrets.DHUSER }}
-      DHPASS: ${{ secrets.DHPASS }}
-      REGISTRY: quay.io
-      COMPNAME: ${{ github.event.repository.name }}
-      BRANCH: ${{ github.head_ref || github.ref_name }}
+    needs: [setenv, release]
 
     steps:
       - name: Harden Runner
@@ -211,15 +194,6 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
-        with:
-          fetch-depth: 0
-
-      - name: Set Convenience Env Vars
-        id: env
-        run: |
-          echo "CHART_VERSION=10.0.${{ github.run_number }}" >> $GITHUB_ENV
-          echo "IMAGE_VERSION=10.0.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> $GITHUB_ENV
-          echo "IMAGE_TAG=${{ env.BRANCH }}-v10.0.${{ github.run_number }}-g$(echo ${{ github.sha }} | cut -c 1-6)" >> $GITHUB_ENV
 
       - name: Generate SBOM
         uses: anchore/sbom-action@07978da4bdb4faa726e52dfc6b1bed63d4b56479 # v0.13.3
@@ -229,13 +203,19 @@ jobs:
           output-file: /tmp/cyclonedx.json
           upload-artifact: false
           upload-release-assets: false
-          image: ${{ env.REGISTRY }}/${{ github.repository }}:${{ env.IMAGE_TAG }}
+          image: ${{ needs.setenv.outputs.image_repo_tag }}
 
       - name: Update Compnent
         id: updatecomp
         env:
-          DIGEST: "${{ steps.build.outputs.digest }}"
+          SHORT_SHA: ${{ needs.setenv.outputs.short_sha }}
+          CHART_VERSION: ${{ needs.setenv.outputs.chart_version }}
+          IMAGE_VERSION: ${{ needs.setenv.outputs.image_version }}
+          IMAGE_TAG: ${{ needs.setenv.outputs.image_tag }}
+          IMAGE_REPO_TAG: ${{ needs.setenv.outputs.image_repo_tag }}
+          DIGEST: ${{ needs.release.outputs.digest }}
         run: |
+          env | sort
           pip install ortelius-cli
           dh envscript --envvars component.toml --envvars_sh env.sh
           source env.sh
