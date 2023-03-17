@@ -40,7 +40,7 @@ jobs:
           DHURL: https://console.deployhub.com
           REGISTRY: quay.io
         run: |
-          BASE_VERSION=$(cat chart/${{ github.event.repository.name }}/Chart.yaml | grep version: | cut -f2 -d: | cut -f1-2 -d.)
+          BASE_VERSION=$(cat chart/${{ github.event.repository.name }}/Chart.yaml | grep version: | cut -f2 -d: | cut -f1-2 -d. | tr -d " ")
           echo "dhurl=${{ env.DHURL }}" >> "$GITHUB_OUTPUT"
           echo "branch=${{ github.head_ref || github.ref_name }}" >> "$GITHUB_OUTPUT"
           echo "chart_version=${BASE_VERSION}.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
