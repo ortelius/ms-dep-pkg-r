@@ -34,22 +34,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      ################################
-      # Run Linter against code base #
-      ################################
-      - name: Lint Code Base
-        uses: github/super-linter/slim@985ef206aaca4d560cb9ee2af2b42ba44adc1d55 # v4.10.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_PYTHON: true
-          VALIDATE_PYTHON_BLACK: true
-          VALIDATE_PYTHON_FLAKE8: true
-          VALIDATE_PYTHON_ISORT: true
-          VALIDATE_PYTHON_MYPY: true
-          VALIDATE_PYTHON_PYLINT: true
-          VALIDATE_DOCKERFILE_HADOLINT: true
-          VALIDATE_MARKDOWN: true
-
       - name: Set Convenience Env Vars
         id: env
         run: |

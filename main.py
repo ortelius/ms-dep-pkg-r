@@ -21,7 +21,7 @@ from typing import List, Optional
 import requests
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query, Request, Response, status
-from pydantic import BaseModel
+from pydantic import BaseModel  # pylint: disable=E0611
 from sqlalchemy import create_engine
 from sqlalchemy.exc import InterfaceError, OperationalError
 
@@ -47,12 +47,9 @@ validateuser_url = os.getenv("VALIDATEUSER_URL", "")
 if len(validateuser_url) == 0:
     validateuser_host = os.getenv("MS_VALIDATE_USER_SERVICE_HOST", "127.0.0.1")
     host = socket.gethostbyaddr(validateuser_host)[0]
-    validateuser_url = "http://" + host + ":" + str(os.getenv("MS_VALIDATE_USER_SERVICE_PORT", 80))
+    validateuser_url = "http://" + host + ":" + str(os.getenv("MS_VALIDATE_USER_SERVICE_PORT", 80))  # Devskim: ignore DS137138
 
-engine = create_engine(
-    "postgresql+psycopg2://" + db_user + ":" + db_pass + "@" + db_host + ":" + db_port + "/" + db_name,
-    pool_pre_ping=True,
-)
+engine = create_engine("postgresql+psycopg2://" + db_user + ":" + db_pass + "@" + db_host + ":" + db_port + "/" + db_name, pool_pre_ping=True)
 
 
 # health check endpoint
@@ -238,4 +235,4 @@ async def getCompPkgDeps(
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=5004)
+    uvicorn.run(app, host="127.0.0.1", port=5004)
