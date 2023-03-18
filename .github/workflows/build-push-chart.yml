@@ -26,6 +26,7 @@ jobs:
       branch: ${{ steps.env.outputs.branch }}
       compname: ${{ steps.env.outputs.compname }}
       dhurl: ${{ steps.env.outputs.dhurl }}
+      gh_handle: ${{ steps.env.outputs.gh_handle }}
 
     steps:
       - name: Checkout
@@ -54,6 +55,7 @@ jobs:
            echo "image_version=${BASE_VERSION}.${{ github.run_number }}-g${SHORT_SHA}"
            echo "registry=${{ env.REGISTRY }}"
            echo "short_sha=${SHORT_SHA}"
+           echo "gh_handle=$GITHUB_ACTOR"
           } >> "$GITHUB_OUTPUT"
 
   release:
@@ -137,16 +139,16 @@ jobs:
       - name: Configure Git
         id: git
         run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git config user.name "${{ needs.setenv.outputs.gh_handle }}"
+          git config user.email "${{ needs.setenv.outputs.gh_handle }}@users.noreply.github.com"
 
       - name: Update Values and Chart
         id: chart
         uses: fjogeleit/yaml-update-action@d98ee6a10a971effea75480e3f315e4dacc89a23 # main
         with:
           message: "Update Image Version to ${{ needs.setenv.outputs.image_tag }}"
-          commitUserName: $GITHUB_ACTOR
-          commitUserEmail: $GITHUB_ACTOR@users.noreply.github.com
+          commitUserName: ${{ needs.setenv.outputs.gh_handle }}
+          commitUserEmail: ${{ needs.setenv.outputs.gh_handle }}@users.noreply.github.com
           branch: main
           masterBranchName: main
           changes: |
