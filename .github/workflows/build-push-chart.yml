@@ -2,9 +2,13 @@
 name: Build/Push Image and Release Charts
 
 on:
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "chart/ms-dep-pkg-r/Chart.yaml"
+      - "chart/ms-dep-pkg-r/values.yaml"
   push:
-    branches:
-      - main
+    branches: [main]
     paths-ignore:
       - "chart/ms-dep-pkg-r/Chart.yaml"
       - "chart/ms-dep-pkg-r/values.yaml"
@@ -29,6 +33,11 @@ jobs:
       gh_handle: ${{ steps.env.outputs.gh_handle }}
 
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@1f99358870fe1c846a3ccba386cc2b2246836776 # v2.2.1
+        with:
+          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+
       - name: Checkout
         id: checkout
         uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
@@ -192,6 +201,13 @@ jobs:
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
+      - name: Trigger Rebuild of Main Chart
+        uses: benc-uk/workflow-dispatch@798e70c97009500150087d30d9f11c5444830385 # v1.2.2
+        with:
+          workflow: generate-main-chart.yml
+          repo: ortelius/ortelius-charts
+          token: ${{ secrets.HELM_INDEXER_TOKEN }}
+
   sbom:
     runs-on: ubuntu-latest
     needs: [setenv, release]
@@ -231,22 +247,4 @@ jobs:
 
         run: |
           pip install ortelius-cli
-          dh envscript --envvars component.toml --envvars_sh env.sh
-          source env.sh
           dh updatecomp --rsp component.toml --deppkg cyclonedx@/tmp/cyclonedx.json
-
-  update-main-chart:
-    runs-on: ubuntu-latest
-    needs: [helm]
-    steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@1f99358870fe1c846a3ccba386cc2b2246836776 # v2.2.1
-        with:
-          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
-
-      - name: Trigger Rebuild of Main Chart
-        uses: benc-uk/workflow-dispatch@798e70c97009500150087d30d9f11c5444830385 # v1.2.2
-        with:
-          workflow: generate-main-chart.yml
-          repo: ortelius/ortelius-charts
-          token: ${{ secrets.HELM_INDEXER_TOKEN }}

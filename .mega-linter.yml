@@ -17,7 +17,7 @@ DISABLE_LINTERS:
   - REPOSITORY_DUSTILOCK
   - REPOSITORY_GIT_DIFF
   - REPOSITORY_TRIVY
-DISABLE_ERRORS: true # Uncomment if you want MegaLinter to detect errors but not block CI to pass
+# DISABLE_ERRORS: true # Uncomment if you want MegaLinter to detect errors but not block CI to pass
 
 PRE_COMMANDS:
   - command: python -m pip install -r /tmp/lint/requirements.in
