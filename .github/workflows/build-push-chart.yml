@@ -236,7 +236,7 @@ jobs:
           DHURL: ${{ needs.setenv.outputs.dhurl }}
           DHUSER: ${{ secrets.DHUSER }}
           DHPASS: ${{ secrets.DHPASS }}
-          BRANCH: ${{ needs.setenv.outputs.branch }}
+          GIT_BRANCH: ${{ needs.setenv.outputs.branch }}
           CHART_VERSION: ${{ needs.setenv.outputs.chart_version }}
           COMPNAME: ${{ needs.setenv.outputs.compname }}
           DIGEST: ${{ needs.release.outputs.digest }}
