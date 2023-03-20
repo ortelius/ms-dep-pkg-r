@@ -3,7 +3,6 @@ name: Build/Push Image and Release Charts
 
 on:
   pull_request:
-    branches: [main]
     paths-ignore:
       - "chart/**/Chart.yaml"
       - "chart/**/values.yaml"
@@ -51,7 +50,7 @@ jobs:
           REGISTRY: quay.io
           BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
-          BASE_VERSION=$(grep version: chart/${{ github.event.repository.name }}/Chart.yaml | cut -f2 -d: | cut -f1-2 -d. | tr -d " ")
+          BASE_VERSION=$(curl -s "https://ortelius.github.io/${{ github.event.repository.name }}/index.yaml" | grep version: | awk '{print $2}' | cut -f1-2 -d. | sort -u -r --version-sort | head -1)
           SHORT_SHA=$(echo ${{ github.sha }} | cut -c 1-6)
           {
            echo "dhurl=${{ env.DHURL }}"
@@ -165,11 +164,7 @@ jobs:
         id: chart
         uses: fjogeleit/yaml-update-action@d98ee6a10a971effea75480e3f315e4dacc89a23 # main
         with:
-          message: "Update Image Version to ${{ needs.setenv.outputs.image_tag }}"
-          commitUserName: ${{ needs.setenv.outputs.gh_handle }}
-          commitUserEmail: ${{ needs.setenv.outputs.gh_handle }}@users.noreply.github.com
-          branch: main
-          masterBranchName: main
+          commitChange: false
           changes: |
             {
               "chart/${{ github.event.repository.name }}/values.yaml":
