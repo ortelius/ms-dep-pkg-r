@@ -5,8 +5,8 @@ name: MegaLinter
 
 on:
   push:
+    branches: ["main"]
   pull_request:
-    branches: [main]
 
 env: # Comment env block if you do not want to apply fixes
   # Apply linter fixes configuration
