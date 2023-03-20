@@ -5,13 +5,13 @@ on:
   pull_request:
     branches: [main]
     paths-ignore:
-      - "chart/ms-dep-pkg-r/Chart.yaml"
-      - "chart/ms-dep-pkg-r/values.yaml"
+      - "chart/**/Chart.yaml"
+      - "chart/**/values.yaml"
   push:
     branches: [main]
     paths-ignore:
-      - "chart/ms-dep-pkg-r/Chart.yaml"
-      - "chart/ms-dep-pkg-r/values.yaml"
+      - "chart/**/Chart.yaml"
+      - "chart/**/values.yaml"
 
 permissions: read-all
 
