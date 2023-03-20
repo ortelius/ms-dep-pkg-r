@@ -31,6 +31,7 @@ jobs:
       compname: ${{ steps.env.outputs.compname }}
       dhurl: ${{ steps.env.outputs.dhurl }}
       gh_handle: ${{ steps.env.outputs.gh_handle }}
+      cr_token: ${{ steps.env.outputs.cr_token }}
 
     steps:
       - name: Harden Runner
@@ -65,6 +66,7 @@ jobs:
            echo "registry=${{ env.REGISTRY }}"
            echo "short_sha=${SHORT_SHA}"
            echo "gh_handle=$GITHUB_ACTOR"
+           echo "cr_token=${{ secrets.GITHUB_TOKEN }}"
           } >> "$GITHUB_OUTPUT"
 
   release:
@@ -199,7 +201,7 @@ jobs:
           charts_dir: chart
           config: .cr.yaml
         env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          CR_TOKEN: ${{ needs.setenv.outputs.cr_token }}
 
       - name: Trigger Rebuild of Main Chart
         uses: benc-uk/workflow-dispatch@798e70c97009500150087d30d9f11c5444830385 # v1.2.2
