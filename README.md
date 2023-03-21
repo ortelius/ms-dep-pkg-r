@@ -1,6 +1,14 @@
 # ortelius-ms-dep-pkg-r
 
-[![Super-Linter](https://github.com/ortelius/ms-dep-pkg-r/actions/workflows/build-push-chart.yml/badge.svg)](https://github.com/ortelius/ms-dep-pkg-r/actions/workflows/build-push-chart.yml)
+![Release](https://img.shields.io/github/v/release/ortelius/ms-dep-pkg-r?sort=semver)
+![license](https://img.shields.io/github/license/ortelius/ms-dep-pkg-r)
+
+![Build](https://img.shields.io/github/actions/workflow/status/ortelius/ms-dep-pkg-r/build-push-chart.yml)
+[![MegaLinter](https://github.com/ortelius/ms-dep-pkg-r/workflows/MegaLinter/badge.svg?branch=main)](https://github.com/ortelius/ms-dep-pkg-r/actions?query=workflow%3AMegaLinter+branch%3Amain)
+![CodeQL](https://github.com/ortelius/ms-dep-pkg-r/workflows/CodeQL/badge.svg)
+
+![Discord](https://img.shields.io/discord/722468819091849316)
+
 
 Dependency Package Data Microservice - Read
 
