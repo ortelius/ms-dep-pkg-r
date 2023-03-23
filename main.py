@@ -34,7 +34,35 @@ def isBlank(myString):
 service_name = "ortelius-ms-dep-pkg-r"
 db_conn_retry = 3
 
-app = FastAPI(title=service_name, description=service_name)
+tags_metadata = [
+    {
+        "name": "health",
+        "description": "health check end point",
+    },
+    {
+        "name": "deppkg",
+        "description": "Retrieve Package Dependencies end point",
+    },
+]
+
+# Init FastAPI
+app = FastAPI(
+    title=service_name,
+    description="RestAPI endpoint for retrieving SBOM data to a component",
+    version="10.0.0",
+    license_info={
+        "name": "Apache 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
+    },
+    servers=[{"url": "http://localhost:5004", "description": "Local Server"}],
+    contact={
+        "name": "Ortelius Open Source Project",
+        "url": "https://github.com/ortelius/ortelius/issues",
+        "email": "support@ortelius.io",
+    },
+    openapi_tags=tags_metadata,
+)
+
 
 # Init db connection
 db_host = os.getenv("DB_HOST", "localhost")
@@ -58,8 +86,11 @@ class StatusMsg(BaseModel):
     service_name: str
 
 
-@app.get("/health")
+@app.get("/health", tags=["health"])
 async def health(response: Response) -> StatusMsg:
+    """
+    This health check end point used by Kubernetes
+    """
     try:
         with engine.connect() as connection:
             conn = connection.connection
@@ -94,13 +125,16 @@ class DepPkgs(BaseModel):
     data: List[DepPkg]
 
 
-@app.get("/msapi/deppkg")
+@app.get("/msapi/deppkg", tags=["deppkg"])
 async def getCompPkgDeps(
     request: Request,
     compid: Optional[int] = None,
     appid: Optional[int] = None,
     deptype: str = Query(..., regex="(?:license|cve)"),
 ) -> DepPkgs:
+    """
+    This is the end point used to retrieve the component's SBOM (package dependencies)
+    """
     try:
         result = requests.get(validateuser_url + "/msapi/validateuser", cookies=request.cookies)
         if result is None:
@@ -235,4 +269,4 @@ async def getCompPkgDeps(
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=5004)
+    uvicorn.run(app, port=5004)
