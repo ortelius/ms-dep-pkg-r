@@ -63,7 +63,6 @@ app = FastAPI(
     openapi_tags=tags_metadata,
 )
 
-
 # Init db connection
 db_host = os.getenv("DB_HOST", "localhost")
 db_name = os.getenv("DB_NAME", "postgres")
