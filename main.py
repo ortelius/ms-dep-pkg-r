@@ -26,13 +26,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import InterfaceError, OperationalError
 
 
-def isBlank(myString):
-    return not (myString and myString.strip())
+def is_blank(check_str):
+    return not (check_str and check_str.strip())
 
 
 # Init Globals
-service_name = "ortelius-ms-dep-pkg-r"
-db_conn_retry = 3
+SERVICE_NAME = "ortelius-ms-dep-pkg-cud"
+DB_CONN_RETRY = 3
 
 tags_metadata = [
     {
@@ -47,7 +47,7 @@ tags_metadata = [
 
 # Init FastAPI
 app = FastAPI(
-    title=service_name,
+    title=SERVICE_NAME,
     description="RestAPI endpoint for retrieving SBOM data to a component",
     version="10.0.0",
     license_info={
@@ -97,14 +97,14 @@ async def health(response: Response) -> StatusMsg:
             cursor = conn.cursor()
             cursor.execute("SELECT 1")
             if cursor.rowcount > 0:
-                return StatusMsg(status="UP", service_name=service_name)
+                return StatusMsg(status="UP", service_name=SERVICE_NAME)
             response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-            return StatusMsg(status="DOWN", service_name=service_name)
+            return StatusMsg(status="DOWN", service_name=SERVICE_NAME)
 
     except Exception as err:
         print(str(err))
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-        return StatusMsg(status="DOWN", service_name=service_name)
+        return StatusMsg(status="DOWN", service_name=SERVICE_NAME)
 
 
 # end health check
@@ -126,7 +126,7 @@ class DepPkgs(BaseModel):
 
 
 @app.get("/msapi/deppkg", tags=["deppkg"])
-async def getCompPkgDeps(
+async def get_comp_pkg_deps(
     request: Request,
     compid: Optional[int] = None,
     appid: Optional[int] = None,
@@ -136,26 +136,20 @@ async def getCompPkgDeps(
     This is the end point used to retrieve the component's SBOM (package dependencies)
     """
     try:
-        result = requests.get(validateuser_url + "/msapi/validateuser", cookies=request.cookies)
+        result = requests.get(validateuser_url + "/msapi/validateuser", cookies=request.cookies, timeout=5)
         if result is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization Failed")
 
         if result.status_code != status.HTTP_200_OK:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authorization Failed status_code=" + str(result.status_code),
-            )
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization Failed status_code=" + str(result.status_code))
     except Exception as err:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authorization Failed:" + str(err),
-        ) from None
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization Failed:" + str(err)) from None
 
     response_data = DepPkgs(data=list())
 
     try:
         # Retry logic for failed query
-        no_of_retry = db_conn_retry
+        no_of_retry = DB_CONN_RETRY
         attempt = 1
         while True:
             try:
@@ -164,14 +158,14 @@ async def getCompPkgDeps(
                     cursor = conn.cursor()
 
                     sqlstmt = ""
-                    id = compid
+                    objid = compid
                     if compid is not None:
                         sqlstmt = "SELECT packagename, packageversion, name, url, summary, '', purl, pkgtype FROM dm_componentdeps where compid = %s and deptype = %s"
                     elif appid is not None:
                         sqlstmt = "select distinct b.packagename, b.packageversion, b.name, b.url, b.summary, fulldomain(c.domainid, c.name), b.purl, b.pkgtype from dm.dm_applicationcomponent a, dm.dm_componentdeps b, dm.dm_component c where appid = %s and a.compid = b.compid and c.id = b.compid and b.deptype = %s"
-                        id = appid
+                        objid = appid
 
-                    params = tuple([id, "license"])
+                    params = tuple([objid, "license"])
                     cursor.execute(sqlstmt, params)
                     rows = cursor.fetchall()
                     valid_url = {}
@@ -192,8 +186,8 @@ async def getCompPkgDeps(
 
                             # check for license on SPDX site if not found just return the license landing page
                             if name not in valid_url:
-                                r = requests.head(url)
-                                if r.status_code == 200:
+                                result = requests.head(url, timeout=5)
+                                if result.status_code == 200:
                                     valid_url[name] = url
                                 else:
                                     valid_url[name] = "https://spdx.org/licenses/"
@@ -214,7 +208,7 @@ async def getCompPkgDeps(
                             )
                         else:
                             v_sql = ""
-                            if isBlank(purl):
+                            if is_blank(purl):
                                 v_sql = "select id, summary, risklevel from dm.dm_vulns where packagename = %s and packageversion = %s"
                                 v_params = tuple([packagename, packageversion])
                             else:
@@ -253,7 +247,7 @@ async def getCompPkgDeps(
             except (InterfaceError, OperationalError) as ex:
                 if attempt < no_of_retry:
                     sleep_for = 0.2
-                    logging.error("Database connection error: {} - sleeping for {}s" " and will retry (attempt #{} of {})".format(ex, sleep_for, attempt, no_of_retry))
+                    logging.error("Database connection error: %s - sleeping for %d seconds and will retry (attempt #%d of %d)", ex, sleep_for, attempt, no_of_retry)
                     # 200ms of sleep time in cons. retry calls
                     sleep(sleep_for)
                     attempt += 1
