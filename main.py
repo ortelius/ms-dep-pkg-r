@@ -161,7 +161,11 @@ async def get_comp_pkg_deps(
                     if compid is not None:
                         sqlstmt = "SELECT packagename, packageversion, name, url, summary, '', purl, pkgtype FROM dm_componentdeps where compid = %s and deptype = %s"
                     elif appid is not None:
-                        sqlstmt = "select distinct b.packagename, b.packageversion, b.name, b.url, b.summary, fulldomain(c.domainid, c.name), b.purl, b.pkgtype from dm.dm_applicationcomponent a, dm.dm_componentdeps b, dm.dm_component c where appid = %s and a.compid = b.compid and c.id = b.compid and b.deptype = %s"
+                        sqlstmt = """
+                            select distinct b.packagename, b.packageversion, b.name, b.url, b.summary, fulldomain(c.domainid, c.name), b.purl, b.pkgtype
+                            from dm.dm_applicationcomponent a, dm.dm_componentdeps b, dm.dm_component c
+                            where appid = %s and a.compid = b.compid and c.id = b.compid and b.deptype = %s
+                            """
                         objid = appid
 
                     params = tuple([objid, "license"])
