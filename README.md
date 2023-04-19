@@ -7,6 +7,7 @@
 [![MegaLinter](https://github.com/ortelius/ms-dep-pkg-r/workflows/MegaLinter/badge.svg?branch=main)](https://github.com/ortelius/ms-dep-pkg-r/actions?query=workflow%3AMegaLinter+branch%3Amain)
 ![CodeQL](https://github.com/ortelius/ms-dep-pkg-r/workflows/CodeQL/badge.svg)
 
+
 ![Discord](https://img.shields.io/discord/722468819091849316)
 
 
