@@ -6,8 +6,6 @@
 ![Build](https://img.shields.io/github/actions/workflow/status/ortelius/ms-dep-pkg-r/build-push-chart.yml)
 [![MegaLinter](https://github.com/ortelius/ms-dep-pkg-r/workflows/MegaLinter/badge.svg?branch=main)](https://github.com/ortelius/ms-dep-pkg-r/actions?query=workflow%3AMegaLinter+branch%3Amain)
 ![CodeQL](https://github.com/ortelius/ms-dep-pkg-r/workflows/CodeQL/badge.svg)
-[![OpenSSF
-Scorecard](https://api.securityscorecards.dev/projects/github.com/ortelius/ms-dep-pkg-r/badge)](https://api.securityscorecards.dev/projects/github.com/ortelius/ms-dep-pkg-r)
 
 
 
