@@ -141,6 +141,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setenv, release]
 
+    permissions:
+      contents: write
+
     if: ${{ github.repository_owner == 'ortelius' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     steps:
       - name: Harden Runner
