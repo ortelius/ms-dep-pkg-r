@@ -31,6 +31,8 @@ spec:
         tier: backend
         track: stable
     spec:
+      nodeSelector:
+        kubernetes.io/os: linux
       containers:
         - name: {{ include "ms-dep-pkg-r.name" . }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
