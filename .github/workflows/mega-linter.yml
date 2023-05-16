@@ -1,22 +1,22 @@
 ---
-  # MegaLinter GitHub Action configuration file
-  # More info at https://megalinter.io
-  name: MegaLinter
+# MegaLinter GitHub Action configuration file
+# More info at https://megalinter.io
+name: MegaLinter
 
-  on:
-    push:
-      branches: ["main"]
-    pull_request:
+on:
+  push:
+    branches: ["main"]
+  pull_request:
 
 env: # Comment env block if you do not want to apply fixes
   # Apply linter fixes configuration
   APPLY_FIXES: none # When active, APPLY_FIXES must also be defined as environment variable (in github/workflows/mega-linter.yml or other CI tool)
 
-  concurrency:
-    group: ${{ github.ref }}-${{ github.workflow }}
-    cancel-in-progress: true
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
 
-  permissions: read-all
+permissions: read-all
 
 jobs:
   build:
