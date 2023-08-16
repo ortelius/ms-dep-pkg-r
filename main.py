@@ -165,9 +165,9 @@ async def get_comp_pkg_deps(
                         sqlstmt = "SELECT packagename, packageversion, name, url, summary, '', purl, pkgtype FROM dm.dm_componentdeps where compid = %s and deptype = %s"
                     elif appid is not None:
                         sqlstmt = """
-                            select distinct b.packagename, b.packageversion, b.name, b.url, b.summary, dm.fulldomain(c.domainid, c.name), b.purl, b.pkgtype
-                            from dm.dm_applicationcomponent a, dm.dm_componentdeps b, dm.dm_component c
-                            where appid = %s and a.compid = b.compid and c.id = b.compid and b.deptype = %s
+                            select distinct b.packagename, b.packageversion, b.name, b.url, b.summary, d.fullname || '.' || c.name, b.purl, b.pkgtype
+                            from dm.dm_applicationcomponent a, dm.dm_componentdeps b, dm.dm_component c, dm.dm_domain d
+                            where appid = %s and a.compid = b.compid and c.id = b.compid and b.deptype = %s and c.domainid = d.id
                             """
                         objid = appid
 
