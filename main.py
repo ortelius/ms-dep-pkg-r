@@ -84,8 +84,8 @@ engine = create_engine("postgresql+psycopg2://" + db_user + ":" + db_pass + "@" 
 
 # health check endpoint
 class StatusMsg(BaseModel):
-    status: str
-    service_name: str
+    status: str = ""
+    service_name: str = ""
 
 
 @app.get("/health", tags=["health"])
@@ -113,14 +113,14 @@ async def health(response: Response) -> StatusMsg:
 
 
 class DepPkg(BaseModel):
-    packagename: str
-    packageversion: str
-    pkgtype: str
-    name: str
-    url: str
-    summary: str
-    fullcompname: str
-    risklevel: str
+    packagename: str = ""
+    packageversion: str = ""
+    pkgtype: str = ""
+    name: str = ""
+    url: str = ""
+    summary: str = ""
+    fullcompname: str = ""
+    risklevel: str = ""
 
 
 class DepPkgs(BaseModel):
@@ -177,13 +177,13 @@ async def get_comp_pkg_deps(
                     valid_url = {}
 
                     for row in rows:
-                        packagename = row[0]
-                        packageversion = row[1]
-                        name = row[2]
-                        url = row[3]
-                        summary = row[4]
-                        fullcompname = row[5]
-                        purl = row[6]
+                        packagename = row[0] if row[0] else ""
+                        packageversion = row[1] if row[1] else ""
+                        name = row[2] if row[2] else ""
+                        url = row[3] if row[3] else ""
+                        summary = row[4] if row[4] else ""
+                        fullcompname = row[5] if row[5] else ""
+                        purl = row[6] if row[6] else ""
                         pkgtype = row[7] if row[7] else ""
 
                         if deptype == "license":
@@ -228,9 +228,9 @@ async def get_comp_pkg_deps(
                             v_rows = v_cursor.fetchall()
 
                             for v_row in v_rows:
-                                cve_id = str(v_row[0])
-                                summary = v_row[1]
-                                risklevel = v_row[2]
+                                cve_id = str(v_row[0]) if v_row[0] else ""
+                                summary = v_row[1] if v_row[1] else ""
+                                risklevel = v_row[2] if v_row[2] else ""
 
                                 url = "https://osv.dev/vulnerability/" + cve_id
                                 response_data.data.append(
