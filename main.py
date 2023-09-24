@@ -19,11 +19,11 @@ import logging
 import os
 import socket
 from time import sleep
-from typing import List, Optional
+from typing import Optional
 
 import requests
 import uvicorn
-from fastapi import FastAPI, HTTPException, Query, Request, Response, status
+from fastapi import FastAPI, HTTPException, Request, Response, status
 from pydantic import BaseModel  # pylint: disable=E0611
 from sqlalchemy import create_engine
 from sqlalchemy.exc import InterfaceError, OperationalError
@@ -64,6 +64,7 @@ app = FastAPI(
         "email": "support@ortelius.io",
     },
     openapi_tags=tags_metadata,
+    debug=True,
 )
 
 # Init db connection
@@ -124,30 +125,20 @@ class DepPkg(BaseModel):
 
 
 class DepPkgs(BaseModel):
-    data: List[DepPkg]
+    data: list[DepPkg] = []
 
 
 @app.get("/msapi/deppkg", tags=["deppkg"])
 async def get_comp_pkg_deps(
-    request: Request,
     compid: Optional[int] = None,
     appid: Optional[int] = None,
-    deptype: str = Query(..., regex="(?:license|cve)"),
+    deptype: str = "",
 ) -> DepPkgs:
     """
     This is the end point used to retrieve the component's SBOM (package dependencies)
     """
-    try:
-        result = requests.get(validateuser_url + "/msapi/validateuser", cookies=request.cookies, timeout=5)
-        if result is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization Failed")
 
-        if result.status_code != status.HTTP_200_OK:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization Failed status_code=" + str(result.status_code))
-    except Exception as err:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization Failed:" + str(err)) from None
-
-    response_data = DepPkgs(data=list())
+    response_data = DepPkgs()
 
     try:
         # Retry logic for failed query
