@@ -18,12 +18,13 @@
 import logging
 import os
 import socket
+import traceback
 from time import sleep
 from typing import Optional
 
 import requests
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request, Response, status
+from fastapi import FastAPI, HTTPException, Response, status
 from pydantic import BaseModel  # pylint: disable=E0611
 from sqlalchemy import create_engine
 from sqlalchemy.exc import InterfaceError, OperationalError
@@ -252,11 +253,10 @@ async def get_comp_pkg_deps(
                 else:
                     raise
 
-    except HTTPException:
-        raise
     except Exception as err:
-        print(str(err))
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err)) from None
+        longerr = str(err) + " ".join(traceback.format_exception(err))
+        print(longerr)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=longerr) from None
 
 
 if __name__ == "__main__":
