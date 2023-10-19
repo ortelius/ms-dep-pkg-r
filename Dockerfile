@@ -1,4 +1,4 @@
-FROM python:alpine3.18@sha256:ae35274f417fc81ba6ee1fc84206e8517f28117566ee6a04a64f004c1409bdac
+FROM python:alpine3.18@sha256:a4029bd4a6ccfc9d23099f7c7fd808b7fe82ed8a625814ac524fc00017c9af6c
 
 COPY . /app
 
