@@ -1,17 +1,27 @@
-FROM python:alpine3.18@sha256:a5d1738d6abbdff3e81c10b7f86923ebcb340ca536e21e8c5ee7d938d263dba1
+FROM cgr.dev/chainguard/python:latest-dev@sha256:502e72496fc093754810dbb6221dc50548050c3f2a1d7aa073398f3097ca6c7a AS builder
+
+#force build
 
 COPY . /app
 
 WORKDIR /app
-RUN python -m pip install --no-cache-dir -r requirements.txt --require-hashes --no-warn-script-location;
+RUN python -m pip install --no-cache-dir -r requirements.txt  --require-hashes --no-warn-script-location;
 
+FROM cgr.dev/chainguard/python:latest@sha256:19ed249c83e1d3daea1629784d2b680dd2b5b490b8ae97d7b5cde19ab1a50aaf
+USER nonroot
 ENV DB_HOST localhost
 ENV DB_NAME postgres
 ENV DB_USER postgres
 ENV DB_PASS postgres
 ENV DB_PORT 5432
 
+COPY --from=builder /app /app
+COPY --from=builder /home/nonroot/.local /home/nonroot/.local
+
+WORKDIR /app
+
 EXPOSE 8080
+ENV PATH=$PATH:/home/nonroot/.local/bin
 
 HEALTHCHECK CMD curl --fail http://localhost:8080/health || exit 1
 
