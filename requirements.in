@@ -4,6 +4,6 @@ pydantic==2.5.3
 SQLAlchemy==2.0.24
 uvicorn==0.25.0
 requests==2.31.0
-numpy==1.26.2
+numpy==1.26.3
 pandas==2.1.4
 certifi==2023.11.17
