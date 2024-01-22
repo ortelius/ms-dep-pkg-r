@@ -5,5 +5,5 @@ SQLAlchemy==2.0.25
 uvicorn==0.26.0
 requests==2.31.0
 numpy==1.26.3
-pandas==2.1.4
+pandas==2.2.0
 certifi==2023.11.17
