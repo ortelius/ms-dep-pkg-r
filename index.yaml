@@ -2,6 +2,17 @@ apiVersion: v1
 entries:
   ms-dep-pkg-r:
   - apiVersion: v2
+    appVersion: 10.0.570
+    created: "2024-02-03T03:53:13.079461871Z"
+    description: Dependency Packages
+    digest: a384fd2ae2178f3547e8eae2c957a90acacca4f6e101b1a93fb83e9611764000
+    icon: https://ortelius.github.io/ortelius-charts/logo.png
+    name: ms-dep-pkg-r
+    type: application
+    urls:
+    - https://github.com/ortelius/ms-dep-pkg-r/releases/download/ms-dep-pkg-r-10.0.570/ms-dep-pkg-r-10.0.570.tgz
+    version: 10.0.570
+  - apiVersion: v2
     appVersion: 10.0.568
     created: "2024-02-02T13:27:09.587169235Z"
     description: Dependency Packages
@@ -3065,4 +3076,4 @@ entries:
     urls:
     - https://github.com/ortelius/ortelius-ms-dep-pkg-r/releases/download/ms-dep-pkg-r-10.0.0-build.41/ms-dep-pkg-r-10.0.0-build.41.tgz
     version: 10.0.0-build.41
-generated: "2024-02-02T13:27:09.586873974Z"
+generated: "2024-02-03T03:53:13.079053075Z"
