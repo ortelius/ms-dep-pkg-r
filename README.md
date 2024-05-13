@@ -1,7 +1,7 @@
 # ortelius-ms-dep-pkg-r
 
 ![Release](https://img.shields.io/github/v/release/ortelius/ms-dep-pkg-r?sort=semver)
-![license](https://img.shields.io/github/license/ortelius/ms-dep-pkg-r)
+![license](https://img.shields.io/github/license/ortelius/.github)
 
 ![Build](https://img.shields.io/github/actions/workflow/status/ortelius/ms-dep-pkg-r/build-push-chart.yml)
 [![MegaLinter](https://github.com/ortelius/ms-dep-pkg-r/workflows/MegaLinter/badge.svg?branch=main)](https://github.com/ortelius/ms-dep-pkg-r/actions?query=workflow%3AMegaLinter+branch%3Amain)
@@ -40,10 +40,10 @@ RestAPI endpoint for retrieving SBOM data to a component
 
 ### [GET]/health
 
-- Summary  
+- Summary
 Health
 
-- Description  
+- Description
 This health check end point used by Kubernetes
 
 #### Responses
@@ -63,10 +63,10 @@ This health check end point used by Kubernetes
 
 ### [GET]/msapi/deppkg
 
-- Summary  
+- Summary
 Get Comp Pkg Deps
 
-- Description  
+- Description
 This is the end point used to retrieve the component's SBOM (package dependencies)
 
 #### Parameters(Query)
