@@ -40,10 +40,10 @@ RestAPI endpoint for retrieving SBOM data to a component
 
 ### [GET]/health
 
-- Summary
+- Summary  
 Health
 
-- Description
+- Description  
 This health check end point used by Kubernetes
 
 #### Responses
@@ -63,10 +63,10 @@ This health check end point used by Kubernetes
 
 ### [GET]/msapi/deppkg
 
-- Summary
+- Summary  
 Get Comp Pkg Deps
 
-- Description
+- Description  
 This is the end point used to retrieve the component's SBOM (package dependencies)
 
 #### Parameters(Query)
