@@ -100,6 +100,7 @@ deptype?: string
     summary?: string
     fullcompname?: string
     risklevel?: string
+    score?: number
   }[]
 }
 ```
@@ -132,6 +133,7 @@ deptype?: string
   summary?: string
   fullcompname?: string
   risklevel?: string
+  score?: number
 }
 ```
 
@@ -148,6 +150,7 @@ deptype?: string
     summary?: string
     fullcompname?: string
     risklevel?: string
+    score?: number
   }[]
 }
 ```
