@@ -123,6 +123,7 @@ class DepPkg(BaseModel):
     summary: str = ""
     fullcompname: str = ""
     risklevel: str = ""
+    score: float = 0.0
 
 
 class DepPkgs(BaseModel):
@@ -154,12 +155,21 @@ async def get_comp_pkg_deps(
                     sqlstmt = ""
                     objid = compid
                     if compid is not None:
-                        sqlstmt = "SELECT packagename, packageversion, name, url, summary, '', purl, pkgtype FROM dm.dm_componentdeps where compid = %s and deptype = %s"
+                        sqlstmt = """SELECT d.packagename, d.packageversion, d.name, d.url, d.summary,
+                            d.purl, d.pkgtype, COALESCE(ci.score, 0.0) AS score FROM dm.dm_componentdeps d
+                            LEFT JOIN dm.dm_componentitem ci ON d.purl = ci.purl
+                            WHERE d.compid = %s AND d.deptype = %s;
+                        """
                     elif appid is not None:
                         sqlstmt = """
-                            select distinct b.packagename, b.packageversion, b.name, b.url, b.summary, d.fullname || '.' || c.name, b.purl, b.pkgtype
-                            from dm.dm_applicationcomponent a, dm.dm_componentdeps b, dm.dm_component c, dm.dm_domain d
-                            where appid = %s and a.compid = b.compid and c.id = b.compid and b.deptype = %s and c.domainid = d.id
+                            SELECT DISTINCT b.packagename, b.packageversion, b.name, b.url, b.summary, d.fullname || '.' || c.name AS fullname,
+                                b.purl, b.pkgtype, COALESCE(ci.score, 0.0) AS score
+                                FROM dm.dm_applicationcomponent a
+                                JOIN dm.dm_componentdeps b ON a.compid = b.compid
+                                JOIN dm.dm_component c ON c.id = b.compid
+                                JOIN dm.dm_domain d ON c.domainid = d.id
+                                LEFT JOIN dm.dm_componentitem ci ON b.purl = ci.purl
+                                WHERE appid = %s AND b.deptype = %s;
                             """
                         objid = appid
 
@@ -177,6 +187,7 @@ async def get_comp_pkg_deps(
                         fullcompname = row[5] if row[5] else ""
                         purl = row[6] if row[6] else ""
                         pkgtype = row[7] if row[7] else ""
+                        score = row[8] if row[8] else ""
 
                         if deptype == "license":
                             if not url:
@@ -202,6 +213,7 @@ async def get_comp_pkg_deps(
                                     summary=summary,
                                     fullcompname=fullcompname,
                                     risklevel="",
+                                    score=score,
                                 )
                             )
                         else:
@@ -235,6 +247,7 @@ async def get_comp_pkg_deps(
                                         summary=summary,
                                         fullcompname=fullcompname,
                                         risklevel=risklevel,
+                                        score=score,
                                     )
                                 )
                             v_cursor.close()
