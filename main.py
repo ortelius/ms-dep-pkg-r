@@ -155,7 +155,7 @@ async def get_comp_pkg_deps(
                     sqlstmt = ""
                     objid = compid
                     if compid is not None:
-                        sqlstmt = """SELECT d.packagename, d.packageversion, d.name, d.url, d.summary,
+                        sqlstmt = """SELECT d.packagename, d.packageversion, d.name, d.url, d.summary, '' AS fullname,
                             d.purl, d.pkgtype, COALESCE(ci.score, 0.0) AS score FROM dm.dm_componentdeps d
                             LEFT JOIN dm.dm_componentitem ci ON d.purl = ci.purl
                             WHERE d.compid = %s AND d.deptype = %s;
