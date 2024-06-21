@@ -187,7 +187,7 @@ async def get_comp_pkg_deps(
                         fullcompname = row[5] if row[5] else ""
                         purl = row[6] if row[6] else ""
                         pkgtype = row[7] if row[7] else ""
-                        score = row[8] if row[8] else ""
+                        score = float(row[8]) if row[8] else 0.0
 
                         if deptype == "license":
                             if not url:
