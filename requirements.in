@@ -8,3 +8,4 @@ numpy==2.0.1
 pandas==2.2.2
 certifi==2024.7.4
 idna==3.7
+starlette==0.37.2
