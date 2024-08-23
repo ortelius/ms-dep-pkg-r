@@ -17,7 +17,7 @@ requests = "2.32.3"
 numpy = "2.1.0"
 pandas = "2.2.2"
 certifi = "2024.7.4"
-idna = "3.7"
+idna = "3.8"
 starlette = "0.38.2"
 
 
