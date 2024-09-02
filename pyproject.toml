@@ -18,7 +18,7 @@ numpy = "2.1.0"
 pandas = "2.2.2"
 certifi = "2024.8.30"
 idna = "3.8"
-starlette = "0.38.2"
+starlette = "0.38.4"
 
 
 [build-system]
