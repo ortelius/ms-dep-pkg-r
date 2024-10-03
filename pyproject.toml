@@ -12,13 +12,13 @@ fastapi = "0.115.0"
 psycopg2-binary = "2.9.9"
 pydantic = "2.9.2"
 sqlalchemy = "2.0.35"
-uvicorn = "0.30.6"
+uvicorn = "0.31.0"
 requests = "2.32.3"
 numpy = "2.1.1"
 pandas = "2.2.3"
 certifi = "2024.8.30"
 idna = "3.10"
-starlette = "0.38.5"
+starlette = "0.39.2"
 
 
 [build-system]
