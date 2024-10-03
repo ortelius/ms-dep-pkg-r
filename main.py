@@ -122,6 +122,7 @@ class DepPkg(BaseModel):
     url: str = ""
     summary: str = ""
     fullcompname: str = ""
+    compid: str = ""
     risklevel: str = ""
     score: float = 0.0
 
@@ -162,8 +163,10 @@ async def get_comp_pkg_deps(
                         """
                     elif appid is not None:
                         sqlstmt = """
-                            SELECT DISTINCT b.packagename, b.packageversion, b.name, b.url, b.summary, d.fullname || '.' || c.name AS fullname,
-                                b.purl, b.pkgtype, COALESCE(ci.score, 0.0) AS score
+                            SELECT DISTINCT b.packagename, b.packageversion, b.name, b.url, b.summary, c.name AS fullname,
+                                b.purl, b.pkgtype, COALESCE(ci.score, 0.0) AS score,
+                                c.parentid,
+                                c.id
                                 FROM dm.dm_applicationcomponent a
                                 JOIN dm.dm_componentdeps b ON a.compid = b.compid
                                 JOIN dm.dm_component c ON c.id = b.compid
@@ -188,6 +191,13 @@ async def get_comp_pkg_deps(
                         purl = row[6] if row[6] else ""
                         pkgtype = row[7] if row[7] else ""
                         score = float(row[8]) if row[8] else 0.0
+                        parentid = str(row[9]) if row[9] else ""
+                        comp = str(row[10]) if row[10] else ""
+
+                        if parentid == comp:
+                            comp = "co" + comp
+                        else:
+                            comp = "cv" + comp
 
                         if deptype == "license":
                             if not url:
@@ -214,6 +224,7 @@ async def get_comp_pkg_deps(
                                     fullcompname=fullcompname,
                                     risklevel="",
                                     score=score,
+                                    compid=comp,
                                 )
                             )
                         else:
@@ -248,6 +259,7 @@ async def get_comp_pkg_deps(
                                         fullcompname=fullcompname,
                                         risklevel=risklevel,
                                         score=score,
+                                        compid=comp,
                                     )
                                 )
                             v_cursor.close()
