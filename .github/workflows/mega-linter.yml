@@ -25,7 +25,7 @@ jobs:
     steps:
       # Git Checkout
       - name: Harden Runner
-        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
         with:
           egress-policy: audit
 
@@ -40,7 +40,7 @@ jobs:
         id: ml
         # You can override MegaLinter flavor used to have faster performances
         # More info at https://megalinter.io/flavors/
-        uses: oxsecurity/megalinter/flavors/python@1fc052d03c7a43c78fe0fee19c9d648b749e0c01 # v8.3.0
+        uses: oxsecurity/megalinter/flavors/python@ec124f7998718d79379a3c5b39f5359952baf21d # v8.4.2
         env:
           # All available variables are described in documentation
           # https://megalinter.io/configuration/
