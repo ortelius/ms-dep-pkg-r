@@ -1,1 +1,184 @@
-{"openapi":"3.1.0","info":{"title":"ortelius-ms-dep-pkg-cud","description":"RestAPI endpoint for retrieving SBOM data to a component","contact":{"name":"Ortelius Open Source Project","url":"https://github.com/ortelius/ortelius/issues","email":"support@ortelius.io"},"license":{"name":"Apache 2.0","url":"https://www.apache.org/licenses/LICENSE-2.0.html"},"version":"10.0.0"},"servers":[{"url":"http://localhost:5004","description":"Local Server"}],"paths":{"/health":{"get":{"tags":["health"],"summary":"Health","description":"This health check end point used by Kubernetes","operationId":"health_health_get","responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/StatusMsg"}}}}}}},"/msapi/deppkg":{"get":{"tags":["deppkg"],"summary":"Get Comp Pkg Deps","description":"This is the end point used to retrieve the component's SBOM (package dependencies)","operationId":"get_comp_pkg_deps_msapi_deppkg_get","parameters":[{"name":"compid","in":"query","required":false,"schema":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Compid"}},{"name":"appid","in":"query","required":false,"schema":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Appid"}},{"name":"deptype","in":"query","required":false,"schema":{"type":"string","default":"","title":"Deptype"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/DepPkgs"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}}},"components":{"schemas":{"DepPkg":{"properties":{"packagename":{"type":"string","title":"Packagename","default":""},"packageversion":{"type":"string","title":"Packageversion","default":""},"pkgtype":{"type":"string","title":"Pkgtype","default":""},"name":{"type":"string","title":"Name","default":""},"url":{"type":"string","title":"Url","default":""},"summary":{"type":"string","title":"Summary","default":""},"fullcompname":{"type":"string","title":"Fullcompname","default":""},"compid":{"type":"string","title":"Compid","default":""},"risklevel":{"type":"string","title":"Risklevel","default":""},"score":{"type":"number","title":"Score","default":0.0}},"type":"object","title":"DepPkg"},"DepPkgs":{"properties":{"data":{"items":{"$ref":"#/components/schemas/DepPkg"},"type":"array","title":"Data","default":[]}},"type":"object","title":"DepPkgs"},"HTTPValidationError":{"properties":{"detail":{"items":{"$ref":"#/components/schemas/ValidationError"},"type":"array","title":"Detail"}},"type":"object","title":"HTTPValidationError"},"StatusMsg":{"properties":{"status":{"type":"string","title":"Status","default":""},"service_name":{"type":"string","title":"Service Name","default":""}},"type":"object","title":"StatusMsg"},"ValidationError":{"properties":{"loc":{"items":{"anyOf":[{"type":"string"},{"type":"integer"}]},"type":"array","title":"Location"},"msg":{"type":"string","title":"Message"},"type":{"type":"string","title":"Error Type"}},"type":"object","required":["loc","msg","type"],"title":"ValidationError"}}},"tags":[{"name":"health","description":"health check end point"},{"name":"deppkg","description":"Retrieve Package Dependencies end point"}]}
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ortelius-ms-dep-pkg-cud",
+    "description": "RestAPI endpoint for retrieving SBOM data to a component",
+    "contact": {
+      "name": "Ortelius Open Source Project",
+      "url": "https://github.com/ortelius/ortelius/issues",
+      "email": "support@ortelius.io"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "version": "10.0.0"
+  },
+  "servers": [
+    { "url": "http://localhost:5004", "description": "Local Server" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["health"],
+        "summary": "Health",
+        "description": "This health check end point used by Kubernetes",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StatusMsg" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/msapi/deppkg": {
+      "get": {
+        "tags": ["deppkg"],
+        "summary": "Get Comp Pkg Deps",
+        "description": "This is the end point used to retrieve the component's SBOM (package dependencies)",
+        "operationId": "get_comp_pkg_deps_msapi_deppkg_get",
+        "parameters": [
+          {
+            "name": "compid",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer" }, { "type": "null" }],
+              "title": "Compid"
+            }
+          },
+          {
+            "name": "appid",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "integer" }, { "type": "null" }],
+              "title": "Appid"
+            }
+          },
+          {
+            "name": "deptype",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "default": "", "title": "Deptype" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DepPkgs" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DepPkg": {
+        "properties": {
+          "packagename": {
+            "type": "string",
+            "title": "Packagename",
+            "default": ""
+          },
+          "packageversion": {
+            "type": "string",
+            "title": "Packageversion",
+            "default": ""
+          },
+          "pkgtype": { "type": "string", "title": "Pkgtype", "default": "" },
+          "name": { "type": "string", "title": "Name", "default": "" },
+          "url": { "type": "string", "title": "Url", "default": "" },
+          "summary": { "type": "string", "title": "Summary", "default": "" },
+          "fullcompname": {
+            "type": "string",
+            "title": "Fullcompname",
+            "default": ""
+          },
+          "compid": { "type": "string", "title": "Compid", "default": "" },
+          "risklevel": {
+            "type": "string",
+            "title": "Risklevel",
+            "default": ""
+          },
+          "score": { "type": "number", "title": "Score", "default": 0.0 }
+        },
+        "type": "object",
+        "title": "DepPkg"
+      },
+      "DepPkgs": {
+        "properties": {
+          "data": {
+            "items": { "$ref": "#/components/schemas/DepPkg" },
+            "type": "array",
+            "title": "Data",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "DepPkgs"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": { "$ref": "#/components/schemas/ValidationError" },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "StatusMsg": {
+        "properties": {
+          "status": { "type": "string", "title": "Status", "default": "" },
+          "service_name": {
+            "type": "string",
+            "title": "Service Name",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "StatusMsg"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": { "type": "string", "title": "Message" },
+          "type": { "type": "string", "title": "Error Type" }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      }
+    }
+  },
+  "tags": [
+    { "name": "health", "description": "health check end point" },
+    {
+      "name": "deppkg",
+      "description": "Retrieve Package Dependencies end point"
+    }
+  ]
+}
