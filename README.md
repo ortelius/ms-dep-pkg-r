@@ -19,20 +19,20 @@ RestAPI endpoint for retrieving SBOM data to a component
 
 ## Path Table
 
-| Method | Path                             | Description       |
-|--------|----------------------------------|-------------------|
-| GET    | [/health](#gethealth)            | Health            |
-| GET    | [/msapi/deppkg](#getmsapideppkg) | Get Comp Pkg Deps |
+| Method | Path | Description |
+| --- | --- | --- |
+| GET | [/health](#gethealth) | Health |
+| GET | [/msapi/deppkg](#getmsapideppkg) | Get Comp Pkg Deps |
 
 ## Reference Table
 
-| Name                | Path                                                                              | Description |
-|---------------------|-----------------------------------------------------------------------------------|-------------|
-| DepPkg              | [#/components/schemas/DepPkg](#componentsschemasdeppkg)                           |             |
-| DepPkgs             | [#/components/schemas/DepPkgs](#componentsschemasdeppkgs)                         |             |
-| HTTPValidationError | [#/components/schemas/HTTPValidationError](#componentsschemashttpvalidationerror) |             |
-| StatusMsg           | [#/components/schemas/StatusMsg](#componentsschemasstatusmsg)                     |             |
-| ValidationError     | [#/components/schemas/ValidationError](#componentsschemasvalidationerror)         |             |
+| Name | Path | Description |
+| --- | --- | --- |
+| DepPkg | [#/components/schemas/DepPkg](#componentsschemasdeppkg) |  |
+| DepPkgs | [#/components/schemas/DepPkgs](#componentsschemasdeppkgs) |  |
+| HTTPValidationError | [#/components/schemas/HTTPValidationError](#componentsschemashttpvalidationerror) |  |
+| StatusMsg | [#/components/schemas/StatusMsg](#componentsschemasstatusmsg) |  |
+| ValidationError | [#/components/schemas/ValidationError](#componentsschemasvalidationerror) |  |
 
 ## Path Details
 
@@ -40,10 +40,10 @@ RestAPI endpoint for retrieving SBOM data to a component
 
 ### [GET]/health
 
-- Summary
+- Summary  
 Health
 
-- Description
+- Description  
 This health check end point used by Kubernetes
 
 #### Responses
@@ -63,10 +63,10 @@ This health check end point used by Kubernetes
 
 ### [GET]/msapi/deppkg
 
-- Summary
+- Summary  
 Get Comp Pkg Deps
 
-- Description
+- Description  
 This is the end point used to retrieve the component's SBOM (package dependencies)
 
 #### Parameters(Query)
