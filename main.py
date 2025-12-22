@@ -241,7 +241,7 @@ async def get_comp_pkg_deps(
                                     fullcompname=fullcompname,
                                     risklevel="",
                                     score=score,
-                                    compid=comp,
+                                    compid=str(comp),
                                 )
                             )
                         else:
@@ -276,7 +276,7 @@ async def get_comp_pkg_deps(
                                         fullcompname=fullcompname,
                                         risklevel=risklevel,
                                         score=score,
-                                        compid=compid,
+                                        compid=str(compid),
                                     )
                                 )
                             v_cursor.close()
