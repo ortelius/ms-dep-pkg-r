@@ -14,10 +14,6 @@ name: 02 - Generate SBOM
         description: "Container registry"
         required: true
         default: "ghcr.io"
-      sbom_format:
-        description: "SBOM format"
-        required: false
-        default: "cyclonedx-json"
 
 permissions:
   contents: read
@@ -45,7 +41,7 @@ jobs:
       - name: Generate SBOM
         run: |
           trivy image \
-            --format ${{ inputs.sbom_format }} \
+            --format cyclonedx \
             --output sbom.cyclonedx.json \
             ${{ inputs.registry }}/${{ inputs.image_name }}@${{ inputs.image_digest }}
 
