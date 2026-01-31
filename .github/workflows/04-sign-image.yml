@@ -1,36 +1,37 @@
+---
 name: 04 - Sign Image
 
 on:
   workflow_dispatch:
     inputs:
       image_name:
-        description: 'Container image name'
+        description: "Container image name"
         required: true
       image_digest:
-        description: 'Image digest'
+        description: "Image digest"
         required: true
       registry:
-        description: 'Container registry'
+        description: "Container registry"
         required: true
-        default: 'ghcr.io'
+        default: "ghcr.io"
 
 permissions:
   contents: read
   packages: write
-  id-token: write  # Required for keyless signing with OIDC
+  id-token: write # Required for keyless signing with OIDC
 
 jobs:
   sign:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
-      
+
       - name: Login to registry
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ inputs.registry }} -u ${{ github.actor }} --password-stdin
-      
+
       - name: Sign image with Cosign (Keyless)
         env:
           IMAGE_URI: ${{ inputs.registry }}/${{ inputs.image_name }}@${{ inputs.image_digest }}
@@ -38,7 +39,7 @@ jobs:
           # Keyless signing with Fulcio and Rekor
           # --yes flag automatically accepts ephemeral key generation
           cosign sign --yes ${IMAGE_URI}
-      
+
       - name: Verify signature
         env:
           IMAGE_URI: ${{ inputs.registry }}/${{ inputs.image_name }}@${{ inputs.image_digest }}
@@ -48,7 +49,7 @@ jobs:
             --certificate-identity-regexp="https://github.com/${{ github.repository }}" \
             --certificate-oidc-issuer=https://token.actions.githubusercontent.com \
             ${IMAGE_URI} | tee verify-output.json
-      
+
       - name: Output signing info
         run: |
           cat > signing-output.json << EOL
@@ -64,7 +65,7 @@ jobs:
           }
           EOL
           cat signing-output.json
-      
+
       - name: Upload signing output
         uses: actions/upload-artifact@v4
         with:

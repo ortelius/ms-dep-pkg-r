@@ -1,12 +1,13 @@
+---
 name: 00 - MegaLinter
 
 on:
   workflow_dispatch:
     inputs:
       ref:
-        description: 'Git reference to lint'
+        description: "Git reference to lint"
         required: false
-        default: 'main'
+        default: "main"
 
 permissions:
   contents: read
@@ -16,14 +17,14 @@ permissions:
 jobs:
   megalinter:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
-      
+
       - name: MegaLinter
         id: ml
         uses: oxsecurity/megalinter@v7
@@ -34,7 +35,7 @@ jobs:
           ENABLE: DOCKERFILE,PYTHON,YAML,MARKDOWN,BASH,JSON
           DISABLE_LINTERS: SPELL_CSPELL
           JSON_REPORTER: true
-      
+
       - name: Upload MegaLinter reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -44,7 +45,7 @@ jobs:
             megalinter-reports/
             megalinter-reports/megalinter-report.json
           retention-days: 30
-      
+
       - name: Create summary
         if: always()
         run: |
@@ -59,7 +60,7 @@ jobs:
           }
           EOL
           cat lint-summary.json
-      
+
       - name: Upload summary
         if: always()
         uses: actions/upload-artifact@v4
@@ -67,7 +68,7 @@ jobs:
           name: lint-summary-${{ github.run_id }}
           path: lint-summary.json
           retention-days: 30
-      
+
       - name: Check linting status
         if: steps.ml.outcome == 'failure'
         run: |

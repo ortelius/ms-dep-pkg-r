@@ -1,22 +1,23 @@
+---
 name: 02 - Generate SBOM
 
 on:
   workflow_dispatch:
     inputs:
       image_name:
-        description: 'Container image name'
+        description: "Container image name"
         required: true
       image_digest:
-        description: 'Image digest'
+        description: "Image digest"
         required: true
       registry:
-        description: 'Container registry'
+        description: "Container registry"
         required: true
-        default: 'ghcr.io'
+        default: "ghcr.io"
       sbom_format:
-        description: 'SBOM format'
+        description: "SBOM format"
         required: false
-        default: 'cyclonedx-json'
+        default: "cyclonedx-json"
 
 permissions:
   contents: read
@@ -25,7 +26,7 @@ permissions:
 jobs:
   generate-sbom:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Install Trivy
         run: |
@@ -33,18 +34,18 @@ jobs:
           echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
           sudo apt-get update
           sudo apt-get install trivy
-      
+
       - name: Login to registry
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ inputs.registry }} -u ${{ github.actor }} --password-stdin
-      
+
       - name: Generate SBOM
         run: |
           trivy image \
             --format ${{ inputs.sbom_format }} \
             --output sbom.cyclonedx.json \
             ${{ inputs.registry }}/${{ inputs.image_name }}@${{ inputs.image_digest }}
-      
+
       - name: Output SBOM metadata
         run: |
           cat > sbom-metadata.json << EOL
@@ -56,7 +57,7 @@ jobs:
           }
           EOL
           cat sbom-metadata.json
-      
+
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
         with:

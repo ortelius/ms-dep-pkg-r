@@ -1,13 +1,14 @@
+---
 name: 03 - Scan SBOM
 
 on:
   workflow_dispatch:
     inputs:
       sbom_artifact_name:
-        description: 'SBOM artifact name'
+        description: "SBOM artifact name"
         required: true
       sbom_workflow_run_id:
-        description: 'SBOM workflow run ID'
+        description: "SBOM workflow run ID"
         required: true
 
 permissions:
@@ -17,7 +18,7 @@ permissions:
 jobs:
   scan:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Install Trivy
         run: |
@@ -25,14 +26,14 @@ jobs:
           echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
           sudo apt-get update
           sudo apt-get install trivy
-      
+
       - name: Download SBOM artifact
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.sbom_artifact_name }}
           run-id: ${{ inputs.sbom_workflow_run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Scan SBOM for vulnerabilities
         id: scan
         run: |
@@ -41,16 +42,16 @@ jobs:
             --output sbom-scan-report.json \
             --severity HIGH,CRITICAL \
             sbom.cyclonedx.json || true
-          
+
           # Count vulnerabilities by severity
           CRITICAL=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length' sbom-scan-report.json || echo 0)
           HIGH=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="HIGH")] | length' sbom-scan-report.json || echo 0)
           MEDIUM=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="MEDIUM")] | length' sbom-scan-report.json || echo 0)
-          
+
           echo "critical_count=$CRITICAL" >> $GITHUB_OUTPUT
           echo "high_count=$HIGH" >> $GITHUB_OUTPUT
           echo "medium_count=$MEDIUM" >> $GITHUB_OUTPUT
-          
+
           # Create summary
           cat > sbom-scan-summary.json << EOL
           {
@@ -61,7 +62,7 @@ jobs:
             "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           }
           EOL
-      
+
       - name: Upload scan results
         uses: actions/upload-artifact@v4
         with:
@@ -70,7 +71,7 @@ jobs:
             sbom-scan-report.json
             sbom-scan-summary.json
           retention-days: 90
-      
+
       - name: Check severity threshold
         run: |
           if [ "${{ steps.scan.outputs.critical_count }}" -gt "0" ]; then

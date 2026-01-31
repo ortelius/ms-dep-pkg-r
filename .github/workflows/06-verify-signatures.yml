@@ -1,30 +1,31 @@
+---
 name: 06 - Verify Signatures
 
 on:
   workflow_dispatch:
     inputs:
       image_name:
-        description: 'Container image name'
+        description: "Container image name"
         required: true
       image_digest:
-        description: 'Image digest'
+        description: "Image digest"
         required: true
       registry:
-        description: 'Container registry'
+        description: "Container registry"
         required: true
-        default: 'ghcr.io'
+        default: "ghcr.io"
       verify_signature:
-        description: 'Verify image signature'
+        description: "Verify image signature"
         required: false
-        default: 'true'
+        default: "true"
       verify_sbom_attestation:
-        description: 'Verify SBOM attestation'
+        description: "Verify SBOM attestation"
         required: false
-        default: 'true'
+        default: "true"
       verify_provenance:
-        description: 'Verify provenance'
+        description: "Verify provenance"
         required: false
-        default: 'false'
+        default: "false"
 
 permissions:
   contents: read
@@ -33,15 +34,15 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
-      
+
       - name: Login to registry
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ inputs.registry }} -u ${{ github.actor }} --password-stdin
-      
+
       - name: Verify signature
         if: inputs.verify_signature == 'true'
         id: verify_sig
@@ -57,7 +58,7 @@ jobs:
             echo "signature_verified=false" >> $GITHUB_OUTPUT
             exit 1
           fi
-      
+
       - name: Verify SBOM attestation
         if: inputs.verify_sbom_attestation == 'true'
         id: verify_sbom
@@ -74,7 +75,7 @@ jobs:
             echo "sbom_verified=false" >> $GITHUB_OUTPUT
             exit 1
           fi
-      
+
       - name: Create verification summary
         run: |
           cat > verification-summary.json << EOL
@@ -87,14 +88,14 @@ jobs:
           }
           EOL
           cat verification-summary.json
-      
+
       - name: Upload verification results
         uses: actions/upload-artifact@v4
         with:
           name: verification-results-${{ github.run_id }}
           path: verification-summary.json
           retention-days: 90
-      
+
       - name: Summary
         run: |
           echo "## Verification Results" >> $GITHUB_STEP_SUMMARY
