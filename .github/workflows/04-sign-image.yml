@@ -1,0 +1,75 @@
+name: 04 - Sign Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_name:
+        description: 'Container image name'
+        required: true
+      image_digest:
+        description: 'Image digest'
+        required: true
+      registry:
+        description: 'Container registry'
+        required: true
+        default: 'ghcr.io'
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write  # Required for keyless signing with OIDC
+
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+      
+      - name: Login to registry
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ inputs.registry }} -u ${{ github.actor }} --password-stdin
+      
+      - name: Sign image with Cosign (Keyless)
+        env:
+          IMAGE_URI: ${{ inputs.registry }}/${{ inputs.image_name }}@${{ inputs.image_digest }}
+        run: |
+          # Keyless signing with Fulcio and Rekor
+          # --yes flag automatically accepts ephemeral key generation
+          cosign sign --yes ${IMAGE_URI}
+      
+      - name: Verify signature
+        env:
+          IMAGE_URI: ${{ inputs.registry }}/${{ inputs.image_name }}@${{ inputs.image_digest }}
+        run: |
+          # Verify with certificate identity
+          cosign verify \
+            --certificate-identity-regexp="https://github.com/${{ github.repository }}" \
+            --certificate-oidc-issuer=https://token.actions.githubusercontent.com \
+            ${IMAGE_URI} | tee verify-output.json
+      
+      - name: Output signing info
+        run: |
+          cat > signing-output.json << EOL
+          {
+            "image_digest": "${{ inputs.image_digest }}",
+            "signed": true,
+            "method": "keyless",
+            "certificate_identity": "https://github.com/${{ github.repository }}",
+            "oidc_issuer": "https://token.actions.githubusercontent.com",
+            "signer": "${{ github.actor }}",
+            "workflow": "${{ github.workflow }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOL
+          cat signing-output.json
+      
+      - name: Upload signing output
+        uses: actions/upload-artifact@v4
+        with:
+          name: signing-output-${{ github.run_id }}
+          path: |
+            signing-output.json
+            verify-output.json
+          retention-days: 90
