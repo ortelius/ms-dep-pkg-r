@@ -43,8 +43,11 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to registry
-        run: |
-          echo "${{ secrets.QUAY_PASSWORD }}" | docker login "${{ inputs.registry }}" -u "${{ secrets.QUAY_USERID }}" --password-stdin
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ${{ inputs.registry }}
+          username: ${{ secrets.QUAY_USERID }}
+          password: ${{ secrets.QUAY_PASSWORD }}
 
       - name: Attest SBOM (Keyless)
         env:
