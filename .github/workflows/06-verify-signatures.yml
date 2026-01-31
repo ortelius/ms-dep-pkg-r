@@ -36,7 +36,7 @@ jobs:
     
     steps:
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
       
       - name: Login to registry
         run: |
@@ -89,7 +89,7 @@ jobs:
           cat verification-summary.json
       
       - name: Upload verification results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: verification-results-${{ github.run_id }}
           path: verification-summary.json
