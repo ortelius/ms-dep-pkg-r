@@ -1,7 +1,7 @@
 ---
 name: 05 - Attest SBOM
 
-on:
+"on":
   workflow_dispatch:
     inputs:
       image_name:
@@ -33,15 +33,10 @@ jobs:
 
     steps:
       - name: Install Cosign
-<<<<<<< HEAD
-        uses: sigstore/cosign-installer@v3
-
-=======
         uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
-      
->>>>>>> 319fc33ac9a23b4ec3a394b4be4968d878399ec5
+
       - name: Download SBOM artifact
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@v7
         with:
           name: ${{ inputs.sbom_artifact_name }}
           run-id: ${{ inputs.sbom_workflow_run_id }}
@@ -49,7 +44,7 @@ jobs:
 
       - name: Login to registry
         run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ inputs.registry }} -u ${{ github.actor }} --password-stdin
+          echo "${{ secrets.QUAY_PASSWORD }}" | docker login "${{ inputs.registry }}" -u "${{ secrets.QUAY_USERID }}" --password-stdin
 
       - name: Attest SBOM (Keyless)
         env:
@@ -60,7 +55,7 @@ jobs:
           cosign attest --yes \
             --type cyclonedx \
             --predicate sbom.cyclonedx.json \
-            ${IMAGE_URI}
+            "${IMAGE_URI}"
 
       - name: Verify attestation
         env:
@@ -71,7 +66,7 @@ jobs:
             --type cyclonedx \
             --certificate-identity-regexp="https://github.com/${{ github.repository }}" \
             --certificate-oidc-issuer=https://token.actions.githubusercontent.com \
-            ${IMAGE_URI} | tee attestation-verify.json
+            "${IMAGE_URI}" | tee attestation-verify.json
 
       - name: Output attestation info
         run: |

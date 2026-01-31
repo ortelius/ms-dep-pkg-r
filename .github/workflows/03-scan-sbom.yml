@@ -1,4 +1,3 @@
----
 name: 03 - Scan SBOM
 
 on:
@@ -23,12 +22,12 @@ jobs:
       - name: Install Trivy
         run: |
           wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
           sudo apt-get update
-          sudo apt-get install trivy
+          sudo apt-get install -y trivy jq
 
       - name: Download SBOM artifact
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@v7
         with:
           name: ${{ inputs.sbom_artifact_name }}
           run-id: ${{ inputs.sbom_workflow_run_id }}
@@ -43,28 +42,28 @@ jobs:
             --severity HIGH,CRITICAL \
             sbom.cyclonedx.json || true
 
-          # Count vulnerabilities by severity
           CRITICAL=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length' sbom-scan-report.json || echo 0)
           HIGH=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="HIGH")] | length' sbom-scan-report.json || echo 0)
           MEDIUM=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="MEDIUM")] | length' sbom-scan-report.json || echo 0)
 
-          echo "critical_count=$CRITICAL" >> $GITHUB_OUTPUT
-          echo "high_count=$HIGH" >> $GITHUB_OUTPUT
-          echo "medium_count=$MEDIUM" >> $GITHUB_OUTPUT
+          {
+            echo "critical_count=$CRITICAL"
+            echo "high_count=$HIGH"
+            echo "medium_count=$MEDIUM"
+          } >> "$GITHUB_OUTPUT"
 
-          # Create summary
-          cat > sbom-scan-summary.json << EOL
+          cat > sbom-scan-summary.json <<EOF
           {
             "critical_count": $CRITICAL,
             "high_count": $HIGH,
             "medium_count": $MEDIUM,
-            "vulnerabilities_found": $(($CRITICAL + $HIGH + $MEDIUM > 0)),
+            "vulnerabilities_found": $((CRITICAL + HIGH + MEDIUM > 0)),
             "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           }
-          EOL
+          EOF
 
       - name: Upload scan results
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@v6
         with:
           name: sbom-scan-${{ github.run_id }}
           path: |
@@ -74,7 +73,9 @@ jobs:
 
       - name: Check severity threshold
         run: |
-          if [ "${{ steps.scan.outputs.critical_count }}" -gt "0" ]; then
-            echo "❌ Found ${{ steps.scan.outputs.critical_count }} CRITICAL vulnerabilities in SBOM"
+          CRITICAL_COUNT="${{ steps.scan.outputs.critical_count }}"
+
+          if [ "$CRITICAL_COUNT" -gt 0 ]; then
+            echo "❌ Found $CRITICAL_COUNT CRITICAL vulnerabilities in SBOM"
             exit 1
           fi

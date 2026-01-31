@@ -1,7 +1,7 @@
 ---
 name: 06 - Verify Signatures
 
-on:
+"on":
   workflow_dispatch:
     inputs:
       image_name:
@@ -37,16 +37,11 @@ jobs:
 
     steps:
       - name: Install Cosign
-<<<<<<< HEAD
-        uses: sigstore/cosign-installer@v3
-
-=======
         uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
-      
->>>>>>> 319fc33ac9a23b4ec3a394b4be4968d878399ec5
+
       - name: Login to registry
         run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ inputs.registry }} -u ${{ github.actor }} --password-stdin
+          echo "${{ secrets.QUAY_PASSWORD }}" | docker login "${{ inputs.registry }}" -u "${{ secrets.QUAY_USERID }}" --password-stdin
 
       - name: Verify signature
         if: inputs.verify_signature == 'true'
@@ -57,10 +52,10 @@ jobs:
           if cosign verify \
             --certificate-identity-regexp="https://github.com/${{ github.repository }}" \
             --certificate-oidc-issuer=https://token.actions.githubusercontent.com \
-            ${IMAGE_URI}; then
-            echo "signature_verified=true" >> $GITHUB_OUTPUT
+            "${IMAGE_URI}"; then
+            echo "signature_verified=true" >> "$GITHUB_OUTPUT"
           else
-            echo "signature_verified=false" >> $GITHUB_OUTPUT
+            echo "signature_verified=false" >> "$GITHUB_OUTPUT"
             exit 1
           fi
 
@@ -74,10 +69,10 @@ jobs:
             --type cyclonedx \
             --certificate-identity-regexp="https://github.com/${{ github.repository }}" \
             --certificate-oidc-issuer=https://token.actions.githubusercontent.com \
-            ${IMAGE_URI}; then
-            echo "sbom_verified=true" >> $GITHUB_OUTPUT
+            "${IMAGE_URI}"; then
+            echo "sbom_verified=true" >> "$GITHUB_OUTPUT"
           else
-            echo "sbom_verified=false" >> $GITHUB_OUTPUT
+            echo "sbom_verified=false" >> "$GITHUB_OUTPUT"
             exit 1
           fi
 
@@ -103,9 +98,11 @@ jobs:
 
       - name: Summary
         run: |
-          echo "## Verification Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Signature Verified: ${{ steps.verify_sig.outputs.signature_verified }}" >> $GITHUB_STEP_SUMMARY
-          echo "✅ SBOM Verified: ${{ steps.verify_sbom.outputs.sbom_verified }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Image: \`${{ inputs.registry }}/${{ inputs.image_name }}@${{ inputs.image_digest }}\`" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Verification Results"
+            echo ""
+            echo "✅ Signature Verified: ${{ steps.verify_sig.outputs.signature_verified }}"
+            echo "✅ SBOM Verified: ${{ steps.verify_sbom.outputs.sbom_verified }}"
+            echo ""
+            echo "Image: \`${{ inputs.registry }}/${{ inputs.image_name }}@${{ inputs.image_digest }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
