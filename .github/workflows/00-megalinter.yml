@@ -29,11 +29,7 @@ jobs:
         id: ml
         uses: oxsecurity/megalinter@42bb470545e359597e7f12156947c436e4e3fb9a # v9
         env:
-          VALIDATE_ALL_CODEBASE: true
-          DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ENABLE: DOCKERFILE,PYTHON,YAML,MARKDOWN,BASH,JSON
-          DISABLE_LINTERS: SPELL_CSPELL
           JSON_REPORTER: true
 
       - name: Upload MegaLinter reports
