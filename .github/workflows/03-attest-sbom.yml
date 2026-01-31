@@ -1,5 +1,5 @@
 ---
-name: 05 - Attest SBOM
+name: 03 - Attest SBOM
 
 "on":
   workflow_dispatch:

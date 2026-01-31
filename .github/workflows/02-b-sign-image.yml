@@ -1,5 +1,5 @@
 ---
-name: 04 - Sign Image
+name: 02-b - Sign Image
 
 "on":
   workflow_dispatch:

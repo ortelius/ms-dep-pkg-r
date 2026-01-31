@@ -1,6 +1,6 @@
-name: 03 - Scan SBOM
+name: 02-c - Scan SBOM
 
-on:
+"on":
   workflow_dispatch:
     inputs:
       sbom_artifact_name:

@@ -1,5 +1,5 @@
 ---
-name: 06 - Verify Signatures
+name: 04 - Verify Signatures
 
 "on":
   workflow_dispatch:

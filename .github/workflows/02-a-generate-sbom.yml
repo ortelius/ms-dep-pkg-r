@@ -1,5 +1,5 @@
 ---
-name: 02 - Generate SBOM
+name: 02-a - Generate SBOM
 
 "on":
   workflow_dispatch:
