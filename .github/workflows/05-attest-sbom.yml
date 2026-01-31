@@ -89,8 +89,7 @@ jobs:
       - name: Upload attestation output
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: attestation-output-${{ github.run_id }}
+          name: attest-sbom-${{ github.run_id }}
           path: |
             attestation-output.json
-            attestation-verify.json
           retention-days: 90

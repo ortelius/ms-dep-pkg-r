@@ -95,8 +95,9 @@ jobs:
       - name: Upload verification results
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: verification-results-${{ github.run_id }}
-          path: verification-summary.json
+          name: verify-signatures-${{ github.run_id }}
+          path: |
+            verification-summary.json
           retention-days: 90
 
       - name: Summary

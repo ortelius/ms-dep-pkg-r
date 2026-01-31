@@ -65,7 +65,7 @@ jobs:
 
       - name: Output build info
         run: |
-          cat > build-output.json << EOL
+          cat > build-image.json << EOL
           {
             "digest": "${{ steps.build.outputs.digest }}",
             "image_url": "${{ inputs.registry }}/${{ inputs.image_name }}@${{ steps.build.outputs.digest }}",
@@ -73,11 +73,12 @@ jobs:
             "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           }
           EOL
-          cat build-output.json
+          cat build-image.json
 
       - name: Upload build output
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: build-output-${{ github.run_id }}
-          path: build-output.json
+          name: build-image-${{ github.run_id }}
+          path: |
+            build-image.json
           retention-days: 30

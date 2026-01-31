@@ -65,9 +65,8 @@ jobs:
       - name: Upload scan results
         uses: actions/upload-artifact@v6
         with:
-          name: sbom-scan-${{ github.run_id }}
+          name: scan-sbom-${{ github.run_id }}
           path: |
-            sbom-scan-report.json
             sbom-scan-summary.json
           retention-days: 90
 

@@ -72,8 +72,7 @@ jobs:
       - name: Upload signing output
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: signing-output-${{ github.run_id }}
+          name: sign-image-${{ github.run_id }}
           path: |
             signing-output.json
-            verify-output.json
           retention-days: 90
