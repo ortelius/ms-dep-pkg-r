@@ -37,7 +37,7 @@ jobs:
 
       - name: Login to registry
         run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ inputs.registry }} -u ${{ github.actor }} --password-stdin
+          echo "${{ secrets.QUAY_PASSWORD }}" | docker login "${{ inputs.registry }}" -u "${{ secrets.QUAY_USERID }}" --password-stdin
 
       - name: Generate SBOM
         run: |
