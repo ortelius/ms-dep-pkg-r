@@ -33,10 +33,15 @@ jobs:
 
     steps:
       - name: Install Cosign
+<<<<<<< HEAD
         uses: sigstore/cosign-installer@v3
 
+=======
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
+      
+>>>>>>> 319fc33ac9a23b4ec3a394b4be4968d878399ec5
       - name: Download SBOM artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: ${{ inputs.sbom_artifact_name }}
           run-id: ${{ inputs.sbom_workflow_run_id }}
@@ -84,7 +89,7 @@ jobs:
           cat attestation-output.json
 
       - name: Upload attestation output
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: attestation-output-${{ github.run_id }}
           path: |

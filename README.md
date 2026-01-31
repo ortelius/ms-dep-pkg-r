@@ -17,6 +17,7 @@
 
 RestAPI endpoint for retrieving SBOM data to a component
 
+
 ## Path Table
 
 | Method | Path                             | Description       |
