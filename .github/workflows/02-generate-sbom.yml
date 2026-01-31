@@ -32,7 +32,7 @@ jobs:
           sudo apt-get install trivy
 
       - name: Login to registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ${{ inputs.registry }}
           username: ${{ secrets.QUAY_USERID }}
@@ -46,7 +46,7 @@ jobs:
             ${{ inputs.registry }}/${{ inputs.image_name }}@${{ inputs.image_digest }}
 
       - name: Upload SBOM
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: generate-sbom-${{ github.run_id }}
           path: |
