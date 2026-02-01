@@ -1,3 +1,4 @@
+---
 name: 00 - MegaLinter
 
 "on":
@@ -19,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
@@ -29,72 +30,44 @@ jobs:
         uses: oxsecurity/megalinter@v8
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Enable JSON reporting for extraction
           JSON_REPORTER: true
-          # Ensure detailed information is available for Claude
-          JSON_REPORTER_OUTPUT_DETAIL: "detailed"
-        # Continue to summary step even if linting finds errors
-        continue-on-error: true
+          JSON_REPORTER_OUTPUT_DETAIL: detailed
 
       - name: Upload MegaLinter reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: megalinter-reports-${{ github.run_id }}
           path: |
             megalinter-reports/
+            megalinter-reports/megalinter-report.json
           retention-days: 30
 
-      - name: Create detailed summary
+      - name: Create summary
         if: always()
         run: |
-          REPORT="megalinter-reports/megalinter-report.json"
-          
-          # Handle case where report might be missing due to early exit
-          if [ ! -f "$REPORT" ]; then
-            echo "{\"status\": \"error\", \"message\": \"MegaLinter report not found\"}" > lint-summary.json
-            exit 0
-          fi
-
-          # 1. Extract high-level summary stats
-          STATUS="${{ steps.ml.outcome }}"
-          LINTERS_RUN=$(jq '.summary.linters_run // 0' $REPORT)
-          LINTERS_FAILED=$(jq '.summary.linters_failed // 0' $REPORT)
-          TOTAL_ERRORS=$(jq '.summary.total_errors // 0' $REPORT)
-          
-          # 2. Extract detailed errors for Claude
-          # This filter collects file path, line number, and error message
-          ERROR_DETAILS=$(jq -c '[.linters[] | select(.status == "error") | .found_errors[]? | {file: .file, line: .line, message: .message, linter: .linter_name}]' $REPORT)
-
-          # 3. Build the unified summary artifact
           cat > lint-summary.json << EOL
           {
-            "status": "$STATUS",
-            "linters_run": $LINTERS_RUN,
-            "linters_failed": $LINTERS_FAILED,
-            "errors_count": $TOTAL_ERRORS,
-            "errors": $ERROR_DETAILS,
+            "status": "${{ steps.ml.outcome }}",
+            "linters_run": "$(jq '.summary.linters_run // 0' megalinter-reports/megalinter-report.json 2>/dev/null || echo 0)",
+            "linters_success": "$(jq '.summary.linters_success // 0' megalinter-reports/megalinter-report.json 2>/dev/null || echo 0)",
+            "linters_failed": "$(jq '.summary.linters_failed // 0' megalinter-reports/megalinter-report.json 2>/dev/null || echo 0)",
+            "errors": "$(jq '.summary.total_errors // 0' megalinter-reports/megalinter-report.json 2>/dev/null || echo 0)",
             "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           }
           EOL
-          
-          echo "Generated lint-summary.json:"
           cat lint-summary.json
 
       - name: Upload summary
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: lint-summary-${{ github.run_id }}
           path: lint-summary.json
           retention-days: 30
 
       - name: Check linting status
-        if: always()
+        if: steps.ml.outcome == 'failure'
         run: |
-          # Fail the workflow if any errors were found so the Orchestrator takes notice
-          TOTAL_ERRORS=$(jq '.errors_count' lint-summary.json)
-          if [ "$TOTAL_ERRORS" -gt 0 ]; then
-            echo "❌ MegaLinter found $TOTAL_ERRORS issues. Orchestrator will attempt auto-fix."
-            exit 1
-          fi
+          echo "❌ MegaLinter found issues"
+          exit 1
