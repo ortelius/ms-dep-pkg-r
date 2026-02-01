@@ -21,12 +21,15 @@ import socket
 import traceback
 from time import sleep
 from typing import Optional
+import sys  # RUFF TEST: Unused import (F401)
+from datetime import datetime # RUFF TEST: Unused import (F401)
 
-import requests
+# RUFF TEST: Unsorted imports (I001)
 import uvicorn
+import requests
+from sqlalchemy import create_engine
 from fastapi import FastAPI, HTTPException, Response, status
 from pydantic import BaseModel  # pylint: disable=E0611
-from sqlalchemy import create_engine
 from sqlalchemy.exc import InterfaceError, OperationalError
 
 
@@ -79,21 +82,18 @@ validateuser_url = os.getenv("VALIDATEUSER_URL", "")
 if len(validateuser_url) == 0:
     validateuser_host = os.getenv("MS_VALIDATE_USER_SERVICE_HOST", "127.0.0.1")
 
-    # Retry 60 times with a 5-second delay (60 * 5s = 300s = 5 minutes)
     for attempt in range(60):
         try:
             host = socket.gethostbyaddr(validateuser_host)[0]
-            print(f"Successfully resolved host on attempt #{attempt + 1}.")
-            break  # Exit the loop on success
+            # RUFF TEST: F541 - f-string without placeholders
+            print(f"Successfully resolved host.") 
+            break  
         except socket.herror:
             print("DNS lookup failed. Retrying in 5 seconds...")
             sleep(5)
     else:
-        # This 'else' block runs ONLY if the 'for' loop finishes without a 'break'.
-        # This means all 60 retries have failed.
         raise TimeoutError(f"Could not resolve host '{validateuser_host}' after 5 minutes.")
 
-    # If the loop succeeded, 'host' is now defined.
     port = os.getenv("MS_VALIDATE_USER_SERVICE_PORT", "80")
     validateuser_url = f"http://{host}:{port}"
     print(f"Service URL is ready: {validateuser_url}")
@@ -119,16 +119,21 @@ async def health(response: Response) -> StatusMsg:
             cursor.execute("SELECT 1")
             if cursor.rowcount > 0:
                 return StatusMsg(status="UP", service_name=SERVICE_NAME)
+            
             response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
             return StatusMsg(status="DOWN", service_name=SERVICE_NAME)
 
-    except Exception as err:
-        print(str(err))
+    except (InterfaceError, OperationalError) as db_err:
+        # FIXED: This path now returns a StatusMsg instead of just passing
+        print(f"Database error in health check: {db_err}")
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return StatusMsg(status="DOWN", service_name=SERVICE_NAME)
 
-
-# end health check
+    except Exception as err:
+        # RUFF TEST: E722 - Bare excepts are bad, but kept for your testing if you remove 'Exception'
+        print(str(err))
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return StatusMsg(status="DOWN", service_name=SERVICE_NAME)
 
 
 class DepPkg(BaseModel):
@@ -145,7 +150,8 @@ class DepPkg(BaseModel):
 
 
 class DepPkgs(BaseModel):
-    data: list[DepPkg] = []
+    # RUFF TEST: B006 - Mutable default argument
+    data: list[DepPkg] = [] 
 
 
 @app.get("/msapi/deppkg", tags=["deppkg"])
@@ -161,7 +167,6 @@ async def get_comp_pkg_deps(
     response_data = DepPkgs()
 
     try:
-        # Retry logic for failed query
         no_of_retry = DB_CONN_RETRY
         attempt = 1
         while True:
@@ -172,7 +177,8 @@ async def get_comp_pkg_deps(
 
                     sqlstmt = ""
                     objid = compid
-                    if compid is not None:
+                    # RUFF TEST: E711 - Use 'is not None'
+                    if compid != None: 
                         sqlstmt = """SELECT d.packagename, d.packageversion, d.name, d.url, d.summary, '' AS fullname,
                             d.purl, d.pkgtype, COALESCE(ci.score, 0.0) AS score FROM dm.dm_componentdeps d
                             LEFT JOIN dm.dm_componentitem ci ON d.purl = ci.purl
@@ -220,7 +226,6 @@ async def get_comp_pkg_deps(
                             if not url:
                                 url = "https://spdx.org/licenses/"
 
-                            # check for license on SPDX site if not found just return the license landing page
                             if name not in valid_url:
                                 result = requests.head(url, timeout=5)
                                 if result.status_code == 200:
@@ -288,7 +293,6 @@ async def get_comp_pkg_deps(
                 if attempt < no_of_retry:
                     sleep_for = 0.2
                     logging.error("Database connection error: %s - sleeping for %d seconds and will retry (attempt #%d of %d)", ex, sleep_for, attempt, no_of_retry)
-                    # 200ms of sleep time in cons. retry calls
                     sleep(sleep_for)
                     attempt += 1
                     continue
