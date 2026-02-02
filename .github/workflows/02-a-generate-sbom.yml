@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   generate-sbom:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Install Trivy
