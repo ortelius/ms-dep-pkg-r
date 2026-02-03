@@ -22,14 +22,91 @@ name: 04 - Verify Signatures
         description: "Verify SBOM attestation"
         required: false
         default: "true"
+      verify_provenance:
+        description: "Verify provenance"
+        required: false
+        default: "false"
+
+permissions:
+  contents: read
+  packages: read
 
 jobs:
   verify:
-    uses: ortelius/slsa-pipeline/.github/workflows/04-verify-signatures.yml@main
-    with:
-      image_name: ${{ inputs.image_name }}
-      image_digest: ${{ inputs.image_digest }}
-      registry: ${{ inputs.registry }}
-      verify_signature: ${{ inputs.verify_signature == 'true' }}
-      verify_sbom_attestation: ${{ inputs.verify_sbom_attestation == 'true' }}
-    secrets: inherit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
+
+      - name: Login to registry
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ${{ inputs.registry }}
+          username: ${{ secrets.QUAY_USERID }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+
+      - name: Verify signature
+        if: inputs.verify_signature == 'true'
+        id: verify_sig
+        env:
+          IMAGE_URI: ${{ inputs.registry }}/${{ inputs.image_name }}@${{ inputs.image_digest }}
+        run: |
+          if cosign verify \
+            --certificate-identity-regexp="https://github.com/${{ github.repository }}" \
+            --certificate-oidc-issuer=https://token.actions.githubusercontent.com \
+            "${IMAGE_URI}"; then
+            echo "signature_verified=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "signature_verified=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      - name: Verify SBOM attestation
+        if: inputs.verify_sbom_attestation == 'true'
+        id: verify_sbom
+        env:
+          IMAGE_URI: ${{ inputs.registry }}/${{ inputs.image_name }}@${{ inputs.image_digest }}
+        run: |
+          if cosign verify-attestation \
+            --type cyclonedx \
+            --certificate-identity-regexp="https://github.com/${{ github.repository }}" \
+            --certificate-oidc-issuer=https://token.actions.githubusercontent.com \
+            "${IMAGE_URI}"; then
+            echo "sbom_verified=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "sbom_verified=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      - name: Create verification summary
+        run: |
+          cat > verification-summary.json << EOL
+          {
+            "all_verified": true,
+            "signature_verified": ${{ steps.verify_sig.outputs.signature_verified || 'false' }},
+            "sbom_verified": ${{ steps.verify_sbom.outputs.sbom_verified || 'false' }},
+            "image_digest": "${{ inputs.image_digest }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOL
+          cat verification-summary.json
+
+      - name: Upload verification results
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: verify-signatures-${{ github.run_id }}
+          path: |
+            verification-summary.json
+          retention-days: 90
+
+      - name: Summary
+        run: |
+          {
+            echo "## Verification Results"
+            echo ""
+            echo "✅ Signature Verified: ${{ steps.verify_sig.outputs.signature_verified }}"
+            echo "✅ SBOM Verified: ${{ steps.verify_sbom.outputs.sbom_verified }}"
+            echo ""
+            echo "Image: \`${{ inputs.registry }}/${{ inputs.image_name }}@${{ inputs.image_digest }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

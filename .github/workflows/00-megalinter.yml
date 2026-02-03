@@ -9,9 +9,65 @@ name: 00 - MegaLinter
         required: false
         default: "main"
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   megalinter:
-    uses: ortelius/slsa-pipeline/.github/workflows/00-megalinter.yml@main
-    with:
-      ref: ${{ inputs.ref }}
-    secrets: inherit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: MegaLinter
+        id: ml
+        uses: oxsecurity/megalinter@v8
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JSON_REPORTER: true
+          JSON_REPORTER_OUTPUT_DETAIL: detailed
+
+      - name: Upload MegaLinter reports
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: megalinter-reports-${{ github.run_id }}
+          path: |
+            megalinter-reports/
+            megalinter-reports/megalinter-report.json
+          retention-days: 30
+
+      - name: Create summary
+        if: always()
+        run: |
+          cat > lint-summary.json << EOL
+          {
+            "status": "${{ steps.ml.outcome }}",
+            "linters_run": "$(jq '.summary.linters_run // 0' megalinter-reports/megalinter-report.json 2>/dev/null || echo 0)",
+            "linters_success": "$(jq '.summary.linters_success // 0' megalinter-reports/megalinter-report.json 2>/dev/null || echo 0)",
+            "linters_failed": "$(jq '.summary.linters_failed // 0' megalinter-reports/megalinter-report.json 2>/dev/null || echo 0)",
+            "errors": "$(jq '.summary.total_errors // 0' megalinter-reports/megalinter-report.json 2>/dev/null || echo 0)",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOL
+          cat lint-summary.json
+
+      - name: Upload summary
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: lint-summary-${{ github.run_id }}
+          path: lint-summary.json
+          retention-days: 30
+
+      - name: Check linting status
+        if: steps.ml.outcome == 'failure'
+        run: |
+          echo "❌ MegaLinter found issues"
+          exit 1

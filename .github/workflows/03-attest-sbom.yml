@@ -21,18 +21,75 @@ name: 03 - Attest SBOM
         description: "SBOM workflow run ID"
         required: true
 
+permissions:
+  contents: read
+  packages: write
+  id-token: write # Required for keyless signing with OIDC
+  actions: read
+
 jobs:
   attest:
-    uses: ortelius/slsa-pipeline/.github/workflows/03-attest-sbom.yml@main
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-      actions: read
-    with:
-      image_name: ${{ inputs.image_name }}
-      image_digest: ${{ inputs.image_digest }}
-      registry: ${{ inputs.registry }}
-      sbom_artifact_name: ${{ inputs.sbom_artifact_name }}
-      sbom_workflow_run_id: ${{ inputs.sbom_workflow_run_id }}
-    secrets: inherit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
+
+      - name: Download SBOM artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: ${{ inputs.sbom_artifact_name }}
+          run-id: ${{ inputs.sbom_workflow_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to registry
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ${{ inputs.registry }}
+          username: ${{ secrets.QUAY_USERID }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+
+      - name: Attest SBOM (Keyless)
+        env:
+          IMAGE_URI: ${{ inputs.registry }}/${{ inputs.image_name }}@${{ inputs.image_digest }}
+        run: |
+          # Keyless attestation with Fulcio and Rekor
+          # --yes flag automatically accepts ephemeral key generation
+          cosign attest --yes \
+            --type cyclonedx \
+            --predicate sbom.cyclonedx.json \
+            "${IMAGE_URI}"
+
+      - name: Verify attestation
+        env:
+          IMAGE_URI: ${{ inputs.registry }}/${{ inputs.image_name }}@${{ inputs.image_digest }}
+        run: |
+          # Verify attestation with certificate identity
+          cosign verify-attestation \
+            --type cyclonedx \
+            --certificate-identity-regexp="https://github.com/${{ github.repository }}" \
+            --certificate-oidc-issuer=https://token.actions.githubusercontent.com \
+            "${IMAGE_URI}" | tee attestation-verify.json
+
+      - name: Output attestation info
+        run: |
+          cat > attestation-output.json << EOL
+          {
+            "image_digest": "${{ inputs.image_digest }}",
+            "attested": true,
+            "type": "cyclonedx",
+            "method": "keyless",
+            "certificate_identity": "https://github.com/${{ github.repository }}",
+            "oidc_issuer": "https://token.actions.githubusercontent.com",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOL
+          cat attestation-output.json
+
+      - name: Upload attestation output
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: attest-sbom-${{ github.run_id }}
+          path: |
+            attestation-output.json
+          retention-days: 90
