@@ -46,8 +46,7 @@ jobs:
           BUILD_ID=$(git rev-list --count HEAD)
           SHORT_SHA=${FULL_SHA::7}
           IMAGE_TAG="${BRANCH}-v10.0.${BUILD_ID}-g${SHORT_SHA}"
-          echo "$TEMPORAL_API_KEY" | base64 -w 0 > key.txt
-          ls -l key.txt
+          echo "$TEMPORAL_API_KEY" | md5sum
 
           python -m slsa_pipeline run \
             --preset standard \
