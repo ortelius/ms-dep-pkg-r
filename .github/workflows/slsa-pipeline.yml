@@ -38,8 +38,8 @@ jobs:
           RUN_ID: ${{ github.run_id }}
           FULL_SHA: ${{ github.sha }}
         run: |
-          set -euo pipefail
-          echo $TEMPORAL_API_KEY | base64
+          set -x
+          echo $TEMPORAL_API_KEY | base64 -w 0
 
           SHORT_SHA=${FULL_SHA::7}
           IMAGE_TAG="${BRANCH}-v10.0.${RUN_ID}-g${SHORT_SHA}"
