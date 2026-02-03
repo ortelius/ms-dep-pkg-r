@@ -26,6 +26,7 @@ jobs:
 
       - name: Run SLSA Pipeline
         env:
+          TEMPORAL_AUTH_TOKEN: ${{ secrets.TEMPORAL_API_KEY }}
           TEMPORAL_API_KEY: ${{ secrets.TEMPORAL_API_KEY }}
           TEMPORAL_URL: ${{ vars.TEMPORAL_URL }}
           TEMPORAL_NAMESPACE: ${{ vars.TEMPORAL_NAMESPACE }}
@@ -38,6 +39,7 @@ jobs:
           FULL_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
+          echo $TEMPORAL_API_KEY | base64
 
           SHORT_SHA=${FULL_SHA::7}
           IMAGE_TAG="${BRANCH}-v10.0.${RUN_ID}-g${SHORT_SHA}"
