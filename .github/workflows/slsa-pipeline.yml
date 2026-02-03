@@ -1,0 +1,52 @@
+name: Run SLSA Pipeline
+
+"on":
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  run-pipeline:
+    name: Execute SLSA Pipeline
+    runs-on: ubuntu-latest
+    
+    # Simplified permissions: read access to all scopes
+    permissions: read-all
+
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install Pipeline Package
+        run: |
+          python -m pip install --upgrade pip
+          pip install ortelius-slsa-pipeline
+
+      - name: Run SLSA Pipeline
+        env:
+          TEMPORAL_API_KEY: ${{ secrets.TEMPORAL_API_KEY }}
+          TEMPORAL_URL: ${{ vars.TEMPORAL_URL }}
+          TEMPORAL_NAMESPACE: ${{ vars.TEMPORAL_NAMESPACE }}
+          REGISTRY: ${{ vars.REGISTRY }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          IMAGE_NAME: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          RUN_ID: ${{ github.run_id }}
+          FULL_SHA: ${{ github.sha }}
+          
+        run: |
+          SHORT_SHA=${FULL_SHA::7}
+          IMAGE_TAG="${BRANCH}-v10.0.${RUN_ID}-g${SHORT_SHA}"
+          
+          python -m slsa_pipeline run \
+            --preset standard \
+            --repo-name "$REPO_NAME" \
+            --repo-owner "$REPO_OWNER" \
+            --image-name "$IMAGE_NAME" \
+            --image-tag "$IMAGE_TAG" \
+            --registry "$REGISTRY" \
+            --auto-fix-lint

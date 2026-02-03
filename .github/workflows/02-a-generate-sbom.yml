@@ -15,40 +15,11 @@ name: 02-a - Generate SBOM
         required: true
         default: "ghcr.io"
 
-permissions:
-  contents: read
-  packages: read
-
 jobs:
   generate-sbom:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Install Trivy
-        run: |
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update
-          sudo apt-get install trivy
-
-      - name: Login to registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
-        with:
-          registry: ${{ inputs.registry }}
-          username: ${{ secrets.QUAY_USERID }}
-          password: ${{ secrets.QUAY_PASSWORD }}
-
-      - name: Generate SBOM
-        run: |
-          trivy image \
-            --format cyclonedx \
-            --output sbom.cyclonedx.json \
-            ${{ inputs.registry }}/${{ inputs.image_name }}@${{ inputs.image_digest }}
-
-      - name: Upload SBOM
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: generate-sbom-${{ github.run_id }}
-          path: |
-            sbom.cyclonedx.json
-          retention-days: 90
+    uses: ortelius/slsa-pipeline/.github/workflows/02-a-generate-sbom.yml@main
+    with:
+      image_name: ${{ inputs.image_name }}
+      image_digest: ${{ inputs.image_digest }}
+      registry: ${{ inputs.registry }}
+    secrets: inherit

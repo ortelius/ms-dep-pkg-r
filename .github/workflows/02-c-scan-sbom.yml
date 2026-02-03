@@ -1,3 +1,4 @@
+---
 name: 02-c - Scan SBOM
 
 "on":
@@ -10,71 +11,10 @@ name: 02-c - Scan SBOM
         description: "SBOM workflow run ID"
         required: true
 
-permissions:
-  contents: read
-  actions: read
-
 jobs:
   scan:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Install Trivy
-        run: |
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update
-          sudo apt-get install -y trivy jq
-
-      - name: Download SBOM artifact
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-        with:
-          name: ${{ inputs.sbom_artifact_name }}
-          run-id: ${{ inputs.sbom_workflow_run_id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Scan SBOM for vulnerabilities
-        id: scan
-        run: |
-          trivy sbom \
-            --format json \
-            --output sbom-scan-report.json \
-            --severity HIGH,CRITICAL \
-            sbom.cyclonedx.json || true
-
-          CRITICAL=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length' sbom-scan-report.json || echo 0)
-          HIGH=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="HIGH")] | length' sbom-scan-report.json || echo 0)
-          MEDIUM=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="MEDIUM")] | length' sbom-scan-report.json || echo 0)
-
-          {
-            echo "critical_count=$CRITICAL"
-            echo "high_count=$HIGH"
-            echo "medium_count=$MEDIUM"
-          } >> "$GITHUB_OUTPUT"
-
-          cat > sbom-scan-summary.json <<EOF
-          {
-            "critical_count": $CRITICAL,
-            "high_count": $HIGH,
-            "medium_count": $MEDIUM,
-            "vulnerabilities_found": $((CRITICAL + HIGH + MEDIUM > 0)),
-            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          }
-          EOF
-
-      - name: Upload scan results
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: scan-sbom-${{ github.run_id }}
-          path: |
-            sbom-scan-summary.json
-          retention-days: 90
-
-      - name: Check severity threshold
-        run: |
-          CRITICAL_COUNT="${{ steps.scan.outputs.critical_count }}"
-
-          if [ "$CRITICAL_COUNT" -gt 0 ]; then
-            echo "❌ Found $CRITICAL_COUNT CRITICAL vulnerabilities in SBOM"
-            exit 1
-          fi
+    uses: ortelius/slsa-pipeline/.github/workflows/02-c-scan-sbom.yml@main
+    with:
+      sbom_artifact_name: ${{ inputs.sbom_artifact_name }}
+      sbom_workflow_run_id: ${{ inputs.sbom_workflow_run_id }}
+    secrets: inherit

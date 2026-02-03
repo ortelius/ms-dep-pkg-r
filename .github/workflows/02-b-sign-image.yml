@@ -15,64 +15,15 @@ name: 02-b - Sign Image
         required: true
         default: "ghcr.io"
 
-permissions:
-  contents: read
-  packages: write
-  id-token: write # Required for keyless signing with OIDC
-
 jobs:
   sign:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
-
-      - name: Login to registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
-        with:
-          registry: ${{ inputs.registry }}
-          username: ${{ secrets.QUAY_USERID }}
-          password: ${{ secrets.QUAY_PASSWORD }}
-
-      - name: Sign image with Cosign (Keyless)
-        env:
-          IMAGE_URI: ${{ inputs.registry }}/${{ inputs.image_name }}@${{ inputs.image_digest }}
-        run: |
-          # Keyless signing with Fulcio and Rekor
-          # --yes flag automatically accepts ephemeral key generation
-          cosign sign --yes "${IMAGE_URI}"
-
-      - name: Verify signature
-        env:
-          IMAGE_URI: ${{ inputs.registry }}/${{ inputs.image_name }}@${{ inputs.image_digest }}
-        run: |
-          # Verify with certificate identity
-          cosign verify \
-            --certificate-identity-regexp="https://github.com/${{ github.repository }}" \
-            --certificate-oidc-issuer=https://token.actions.githubusercontent.com \
-            "${IMAGE_URI}" | tee verify-output.json
-
-      - name: Output signing info
-        run: |
-          cat > signing-output.json << EOL
-          {
-            "image_digest": "${{ inputs.image_digest }}",
-            "signed": true,
-            "method": "keyless",
-            "certificate_identity": "https://github.com/${{ github.repository }}",
-            "oidc_issuer": "https://token.actions.githubusercontent.com",
-            "signer": "${{ github.actor }}",
-            "workflow": "${{ github.workflow }}",
-            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          }
-          EOL
-          cat signing-output.json
-
-      - name: Upload signing output
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: sign-image-${{ github.run_id }}
-          path: |
-            signing-output.json
-          retention-days: 90
+    uses: ortelius/slsa-pipeline/.github/workflows/02-b-sign-image.yml@main
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    with:
+      image_name: ${{ inputs.image_name }}
+      image_digest: ${{ inputs.image_digest }}
+      registry: ${{ inputs.registry }}
+    secrets: inherit
