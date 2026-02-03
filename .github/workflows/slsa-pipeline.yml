@@ -30,6 +30,7 @@ jobs:
 
       - name: Run SLSA Pipeline
         env:
+          GITHUB_TOKEN: ${{ secrets.TEMPORAL_GITHUB_TOKEN }}
           TEMPORAL_AUTH_TOKEN: ${{ secrets.TEMPORAL_API_KEY }}
           TEMPORAL_API_KEY: ${{ secrets.TEMPORAL_API_KEY }}
           TEMPORAL_URL: ${{ vars.TEMPORAL_URL }}
@@ -46,7 +47,6 @@ jobs:
           BUILD_ID=$(git rev-list --count HEAD)
           SHORT_SHA=${FULL_SHA::7}
           IMAGE_TAG="${BRANCH}-v10.0.${BUILD_ID}-g${SHORT_SHA}"
-          echo "$TEMPORAL_API_KEY" | md5sum
 
           python -m slsa_pipeline run \
             --preset standard \
