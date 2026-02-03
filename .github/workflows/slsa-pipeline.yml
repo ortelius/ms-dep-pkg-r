@@ -20,12 +20,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'   # or 3.12 for safety
+          python-version: '3.12'  
 
       - name: Install Pipeline Package
         run: |
           python -m pip install --upgrade pip
           pip install ortelius-slsa-pipeline --upgrade
+          pip install pyjwt
 
       - name: Run SLSA Pipeline
         env:
@@ -45,7 +46,8 @@ jobs:
           BUILD_ID=$(git rev-list --count HEAD)
           SHORT_SHA=${FULL_SHA::7}
           IMAGE_TAG="${BRANCH}-v10.0.${BUILD_ID}-g${SHORT_SHA}"
-          echo "$TEMPORAL_API_KEY" | base64 -w 0
+          echo "$TEMPORAL_API_KEY" | base64 -w 0 > key.txt
+          cat key.txt
 
           python -m slsa_pipeline run \
             --preset standard \
