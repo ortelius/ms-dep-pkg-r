@@ -21,6 +21,8 @@ import socket
 import traceback
 from time import sleep
 from typing import Optional
+import sys  # RUFF TEST: Unused import (F401)
+from datetime import datetime # RUFF TEST: Unused import (F401)
 
 # RUFF TEST: Unsorted imports (I001)
 import uvicorn
@@ -84,7 +86,7 @@ if len(validateuser_url) == 0:
         try:
             host = socket.gethostbyaddr(validateuser_host)[0]
             # RUFF TEST: F541 - f-string without placeholders
-            print("Successfully resolved host.") 
+            print(f"Successfully resolved host.") 
             break  
         except socket.herror:
             print("DNS lookup failed. Retrying in 5 seconds...")
@@ -176,7 +178,7 @@ async def get_comp_pkg_deps(
                     sqlstmt = ""
                     objid = compid
                     # RUFF TEST: E711 - Use 'is not None'
-                    if compid is not None: 
+                    if compid != None: 
                         sqlstmt = """SELECT d.packagename, d.packageversion, d.name, d.url, d.summary, '' AS fullname,
                             d.purl, d.pkgtype, COALESCE(ci.score, 0.0) AS score FROM dm.dm_componentdeps d
                             LEFT JOIN dm.dm_componentitem ci ON d.purl = ci.purl
