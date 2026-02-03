@@ -30,7 +30,6 @@ jobs:
 
       - name: Run SLSA Pipeline
         env:
-          GITHUB_TOKEN: ${{ secrets.TEMPORAL_GITHUB_TOKEN }}
           TEMPORAL_AUTH_TOKEN: ${{ secrets.TEMPORAL_API_KEY }}
           TEMPORAL_API_KEY: ${{ secrets.TEMPORAL_API_KEY }}
           TEMPORAL_URL: ${{ vars.TEMPORAL_URL }}
