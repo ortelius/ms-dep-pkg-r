@@ -1,8 +1,10 @@
+---
 name: Run SLSA Pipeline
 
-"on":
+on:
   push:
-      branches: [ main ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -10,7 +12,6 @@ jobs:
     name: Execute SLSA Pipeline
     runs-on: ubuntu-latest
     
-    # Simplified permissions: read access to all scopes
     permissions: read-all
 
     steps:
