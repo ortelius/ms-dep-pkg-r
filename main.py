@@ -32,7 +32,6 @@ from fastapi import FastAPI, HTTPException, Response, status
 from pydantic import BaseModel  # pylint: disable=E0611
 from sqlalchemy.exc import InterfaceError, OperationalError
 
-
 def is_blank(check_str):
     return not (check_str and check_str.strip())
 
