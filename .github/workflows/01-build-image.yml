@@ -43,10 +43,10 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4
 
       - name: Login to registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4
         with:
           registry: ${{ inputs.registry }}
           username: ${{ secrets.QUAY_USERID }}
@@ -54,7 +54,7 @@ jobs:
 
       - name: Build and push
         id: build
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6
+        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7
         with:
           context: ${{ inputs.build_context }}
           file: ${{ inputs.dockerfile_path }}
@@ -76,7 +76,7 @@ jobs:
           cat build-image.json
 
       - name: Upload build output
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: build-image-${{ github.run_id }}
           path: |

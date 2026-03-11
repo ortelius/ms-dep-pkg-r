@@ -25,7 +25,7 @@ jobs:
     steps:
       # Git Checkout
       - name: Harden Runner
-        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
         with:
           egress-policy: audit
 
@@ -40,7 +40,7 @@ jobs:
         id: ml
         # You can override MegaLinter flavor used to have faster performances
         # More info at https://megalinter.io/flavors/
-        uses: oxsecurity/megalinter/flavors/python@42bb470545e359597e7f12156947c436e4e3fb9a # v9.3.0
+        uses: oxsecurity/megalinter/flavors/python@8fbdead70d1409964ab3d5afa885e18ee85388bb # v9.4.0
         env:
           # All available variables are described in documentation
           # https://megalinter.io/configuration/
@@ -51,7 +51,7 @@ jobs:
       # Upload MegaLinter artifacts
       - name: Archive production artifacts
         if: ${{ success() || failure() }}
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: MegaLinter reports
           path: |

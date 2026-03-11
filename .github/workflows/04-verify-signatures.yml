@@ -40,7 +40,7 @@ jobs:
         uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
 
       - name: Login to registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4
         with:
           registry: ${{ inputs.registry }}
           username: ${{ secrets.QUAY_USERID }}
@@ -93,7 +93,7 @@ jobs:
           cat verification-summary.json
 
       - name: Upload verification results
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: verify-signatures-${{ github.run_id }}
           path: |
