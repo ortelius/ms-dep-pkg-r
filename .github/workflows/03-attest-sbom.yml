@@ -36,14 +36,14 @@ jobs:
         uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
 
       - name: Download SBOM artifact
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: ${{ inputs.sbom_artifact_name }}
           run-id: ${{ inputs.sbom_workflow_run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4
         with:
           registry: ${{ inputs.registry }}
           username: ${{ secrets.QUAY_USERID }}
@@ -87,7 +87,7 @@ jobs:
           cat attestation-output.json
 
       - name: Upload attestation output
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: attest-sbom-${{ github.run_id }}
           path: |
